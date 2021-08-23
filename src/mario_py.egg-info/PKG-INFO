@@ -1,0 +1,21 @@
+Metadata-Version: 2.1
+Name: mario-py
+Version: 0.0.1
+Summary: A package for matching and integrating multi-modal single cell data with partially overlapping features
+Home-page: https://github.com/shuxiaoc/mario-py
+Author: Shuxiao Chen, Bokai Zhu
+Author-email: shuxiaoc@wharton.upenn.edu, bkzhu@stanford.edu
+License: UNKNOWN
+Project-URL: Bug Tracker, https://github.com/shuxiaoc/mario-py/issues
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: Apache License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+
+# mario-py
+`mario-py` is a Python package for matching and integrating multi-modal single cell data with partially overlapping features.
+
+
