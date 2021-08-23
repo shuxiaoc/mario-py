@@ -1,5 +1,4 @@
 import numpy as np
-from sklearn.cross_decomposition import CCA
 
 
 def normalize(df):
@@ -17,39 +16,6 @@ def normalize(df):
     df = df - np.mean(df, axis=0)
     df = df / np.std(df, axis=0)
     return df
-
-
-def get_cancor(X, Y, n_components=10, max_iter=1000):
-    """Fit CCA and calculate the canonical correlations.
-
-    Parameters
-    ----------
-    X: array-like of shape (n_samples, n_features_of_X)
-        First dataset.
-    Y: array-like of shape (n_samples, n_features_of_Y)
-        Second dataset.
-    n_components: int, default=2
-        Number of CCA components to calculate; must be <= min(n_features_of_X, n_features_of_Y)
-    max_iter: int, default=1000
-        Maximum number of iterations.
-
-    Returns
-    -------
-    cancor: array-like of shape (n_components, )
-        Vector of canonical components.
-    cca: CCA
-        CCA object.
-    """
-    assert X.shape[1] >= n_components
-    assert Y.shape[1] >= n_components
-
-    cca = CCA(n_components=n_components, max_iter=max_iter)
-    cca.fit(X, Y)
-    X_c, Y_c = cca.transform(X, Y)
-    cancor = np.corrcoef(
-        X_c, Y_c, rowvar=False).diagonal(
-        offset=cca.n_components)
-    return cancor, cca
 
 
 def log_normalize(X, scale_factor=1e6):

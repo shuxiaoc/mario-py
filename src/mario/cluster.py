@@ -267,8 +267,6 @@ def jr_kmeans(X, init_cluster_labels, n_clusters,
 
     # prev_glob_cluster_labels = init_cluster_labels[0]
     prev_loss = np.Inf
-    # if verbose:
-        # print("Start training...")
     for ii in range(max_iter):
         ind_cluster_labels, glob_cluster_labels, loss = \
             jr_kmeans_one_step(X, init_cluster_labels,

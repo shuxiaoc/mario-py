@@ -149,7 +149,7 @@ def get_matching_from_indices(col_idx, n1, n2, m_max):
 
 
 def match_cells(dist_mat, sparsity, m_min, m_max, num_cells_to_use,
-                 min_dist, mode='auto'):
+                min_dist, mode='auto'):
     """
     Given dist_mat, first trim it to a k-NN graph according to the desired sparsity
     sparsity level, then do a matching according to the specified parameters.

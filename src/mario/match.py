@@ -1,7 +1,10 @@
 import numpy as np
 import warnings
+import os
+
+import pandas as pd
 from sklearn.utils.extmath import randomized_svd
-from . import match_utils, utils
+from . import match_utils, utils, embed
 from .cluster import spectral_clustering, jr_kmeans
 
 
@@ -43,7 +46,7 @@ class Mario(object):
 
         # cache some results
         self.dist = {'ovlp': None, 'all': None}
-        self.matching = {'ovlp': None, 'all': None, 'wted': None, 'final': None}
+        self.matching = {'ovlp': None, 'all': None, 'wted': None, 'final': None, 'knn': None}
         self.best_wt = None
         self.stacked_svd = {'U': None, 's': None, 'Vh': None}
         self.ovlp_cancor = None
@@ -66,7 +69,7 @@ class Mario(object):
         """
         if n_components > len(self.ovlp_features):
             warnings.warn("n_components exceed the number of overlapping features,"
-                            " set it to be the number of overlapping features.")
+                          " set it to be the number of overlapping features.")
             n_components = len(self.ovlp_features)
 
         self.n_components['ovlp'] = n_components
@@ -196,14 +199,45 @@ class Mario(object):
             if dist_mat not in self.dist or self.dist[dist_mat] is None:
                 raise ValueError("Distance not found!")
             self.sparsity[dist_mat] = sparsity
-            self.matching[dist_mat] = match_utils.match_cells(
-                self.dist[dist_mat], sparsity, self.m_min, self.m_max, self.num_cells_to_use, self.min_dist, mode
-            )
+            try:
+                self.matching[dist_mat] = match_utils.match_cells(
+                    self.dist[dist_mat], sparsity, self.m_min, self.m_max, self.num_cells_to_use, self.min_dist, mode
+                )
+            except ValueError:
+                # too sparse, find the suitable sparsity level
+                warnings.warn(
+                    'Current sparsity config '
+                    'is too sparse, finding a suitable sparsity level...'
+                )
+                _, new_sparsity = self.search_minimum_sparsity(
+                    self.dist[dist_mat], slackness=200, init_sparsity=self.sparsity[dist_mat] + 1, verbose=True
+                )
+                warnings.warn('The new sparsity level is {}'.format(new_sparsity))
+                self.sparsity[dist_mat] = new_sparsity
+                self.matching[dist_mat] = match_utils.match_cells(
+                    self.dist[dist_mat], new_sparsity, self.m_min, self.m_max, self.num_cells_to_use, self.min_dist,
+                    mode
+                )
             return self.matching[dist_mat]
         else:
-            return match_utils.match_cells(
-                dist_mat, sparsity, self.m_min, self.m_max, self.num_cells_to_use, self.min_dist, mode
-            )
+            try:
+                matching = match_utils.match_cells(
+                    dist_mat, sparsity, self.m_min, self.m_max, self.num_cells_to_use, self.min_dist, mode
+                )
+            except ValueError:
+                # too sparse, find the suitable sparsity level
+                warnings.warn(
+                    'Current sparsity config '
+                    'is too sparse, finding a suitable sparsity level...'
+                )
+                _, new_sparsity = self.search_minimum_sparsity(
+                    self.dist[dist_mat], slackness=200, init_sparsity=sparsity + 1, verbose=True
+                )
+                warnings.warn('The new sparsity level is {}'.format(new_sparsity))
+                matching = match_utils.match_cells(
+                    dist_mat, new_sparsity, self.m_min, self.m_max, self.num_cells_to_use, self.min_dist, mode
+                )
+            return matching
 
     def _align_modalities(self, matching):
         """Align df1 so so that cell i in df1 is matched to the "averaged cell" in cells matching[i] in df2.
@@ -267,7 +301,7 @@ class Mario(object):
             n_components = min(self.p1, self.p2)
 
         X, Y = self._align_modalities(matching)
-        cancor, cca = utils.get_cancor(X, Y, n_components, max_iter)
+        cancor, cca = embed.get_cancor(X, Y, n_components, max_iter)
 
         return cancor, cca
 
@@ -318,7 +352,7 @@ class Mario(object):
             else:
                 # use cached results
                 dist_mat = utils.cdist_correlation(self.ovlp_scores['x'][:, :n_components],
-                                             self.ovlp_scores['y'][:, :n_components])
+                                                   self.ovlp_scores['y'][:, :n_components])
                 cancor = self.ovlp_cancor[:n_components]
         else:
             # use user-specified matching
@@ -368,35 +402,11 @@ class Mario(object):
         match_subsampled.specify_matching_params(self.n_matched_per_cell)
         # do matching
         _ = match_subsampled.compute_dist_ovlp(self.n_components['ovlp'])
-        try:
-            _ = match_subsampled.match_cells('ovlp', self.sparsity['ovlp'], mode='auto')
-        except ValueError:
-            # too sparse, find the suitable sparsity level
-            warnings.warn(
-                'When using ovlp features, current sparsity config '
-                'is too sparse, finding a suitable sparsity level...'
-            )
-            _, new_sparsity = match_subsampled.search_minimum_sparsity(
-                match_subsampled.dist['ovlp'], slackness=200, init_sparsity=self.sparsity['ovlp'] + 1, verbose=True
-            )
-            warnings.warn('The new sparsity level is {}'.format(new_sparsity))
-            _ = match_subsampled.match_cells('ovlp', new_sparsity, mode='auto')
+        _ = match_subsampled.match_cells('ovlp', self.sparsity['ovlp'], mode='auto')
 
         # use all features
         _ = match_subsampled.compute_dist_all('ovlp', n_components=self.n_components['all'])
-        try:
-            _ = match_subsampled.match_cells('all', self.sparsity['all'], mode='auto')
-        except ValueError:
-            warnings.warn(
-                'When using all features, current sparsity config '
-                'is too sparse, finding a suitable sparsity level...'
-            )
-            # too sparse, find the suitable sparsity level
-            _, new_sparsity = match_subsampled.search_minimum_sparsity(
-                match_subsampled.dist['all'], slackness=200, init_sparsity=self.sparsity['all'] + 1, verbose=True
-            )
-            warnings.warn('The new sparsity level is {}'.format(new_sparsity))
-            _ = match_subsampled.match_cells('all', new_sparsity, mode='auto')
+        _ = match_subsampled.match_cells('all', self.sparsity['all'], mode='auto')
 
         # calculate test statistics
         cancor_ovlp_obs = np.mean(match_subsampled.fit_cca(match_subsampled.matching['ovlp'], n_components=top_k)[0])
@@ -413,8 +423,8 @@ class Mario(object):
             while trial_idx < max_trial:
                 trial_idx += 1
                 try:
-                    rand_signs_1 = 2 * np.random.binomial(1, 1-flip_prob, match_subsampled.n1) - 1
-                    rand_signs_2 = 2 * np.random.binomial(1, 1-flip_prob, match_subsampled.n2) - 1
+                    rand_signs_1 = 2 * np.random.binomial(1, 1 - flip_prob, match_subsampled.n1) - 1
+                    rand_signs_2 = 2 * np.random.binomial(1, 1 - flip_prob, match_subsampled.n2) - 1
                     df1_flipped = (match_subsampled.df1.T * rand_signs_1).T
                     df2_flipped = (match_subsampled.df2.T * rand_signs_2).T
 
@@ -423,20 +433,7 @@ class Mario(object):
 
                     # use ovlp features
                     _ = match_flipped.compute_dist_ovlp(self.n_components['ovlp'])
-                    try:
-                        _ = match_flipped.match_cells('ovlp', self.sparsity['ovlp'], mode='auto')
-                    except ValueError:
-                        # too sparse, find the suitable sparsity level
-                        warnings.warn(
-                            'When using ovlp features, current sparsity config '
-                            'is too sparse, finding a suitable sparsity level...'
-                        )
-                        _, new_sparsity = match_flipped.search_minimum_sparsity(
-                            match_flipped.dist['ovlp'], slackness=200,
-                            init_sparsity=self.sparsity['ovlp'] + 1, verbose=True
-                        )
-                        warnings.warn('The new sparsity level is {}'.format(new_sparsity))
-                        _ = match_flipped.match_cells('ovlp', new_sparsity, mode='auto')
+                    _ = match_flipped.match_cells('ovlp', self.sparsity['ovlp'], mode='auto')
 
                     # calculate the median/mean of top_k cancors
                     cancor_ovlp_list.append(np.mean(
@@ -445,20 +442,7 @@ class Mario(object):
 
                     # use all features
                     _ = match_flipped.compute_dist_all('ovlp', n_components=self.n_components['all'])
-                    try:
-                        _ = match_flipped.match_cells('all', self.sparsity['all'], mode='auto')
-                    except ValueError:
-                        warnings.warn(
-                            'When using all features, current sparsity config '
-                            'is too sparse, finding a suitable sparsity level...'
-                        )
-                        # too sparse, find the suitable sparsity level
-                        _, new_sparsity = match_flipped.search_minimum_sparsity(
-                            match_flipped.dist['all'], slackness=200,
-                            init_sparsity=self.sparsity['all'] + 1, verbose=True
-                        )
-                        warnings.warn('The new sparsity level is {}'.format(new_sparsity))
-                        _ = match_flipped.match_cells('all', new_sparsity, mode='auto')
+                    _ = match_flipped.match_cells('all', self.sparsity['all'], mode='auto')
 
                     # calculate the median/mean of top_k cancors
                     cancor_all_list.append(np.mean(
@@ -516,7 +500,7 @@ class Mario(object):
             pval_ovlp += curr_pval_ovlp
             pval_all += curr_pval_all
 
-        return pval_ovlp/subsample_rounds, pval_all/subsample_rounds
+        return pval_ovlp / subsample_rounds, pval_all / subsample_rounds
 
     def interpolate(self, n_wts=10, top_k=10, verbose=True):
         """
@@ -581,6 +565,39 @@ class Mario(object):
 
         return self.best_wt, self.matching['wted']
 
+    def knn_matching(self, dist_mat='wted', k=5):
+        """Matching via k-nearest neighbors.
+
+        Parameters
+        ----------
+        dist_mat : str or a user-specified distance matrix, default='wted'
+            If 'ovlp', then match using the distance matrix computed from overlapping features;
+            if 'all', then match using the distance matrix computed from all the features;
+            if 'wted', then using the best interpolated distance matrix;
+            if a user-specified array-like of shape (n1, n2), then match using this distance matrix.
+        k : int
+            Number of nearest neighbors.
+
+        Returns
+        -------
+        list
+            A list of (potentially variable length) lists;
+            it holds that the i-th row in the first dataset is matched to the res[i]-th row in the second dataset.
+        """
+        if dist_mat == 'wted':
+            assert self.best_wt is not None
+            dist_argsort = np.argsort((1 - self.best_wt) * self.dist['ovlp'] + self.best_wt * self.dist['all'], axis=1)
+        elif dist_mat == 'ovlp':
+            dist_argsort = np.argsort(self.dist['ovlp'], axis=1)
+        elif dist_mat == 'all':
+            dist_argsort = np.argsort(self.dist['all'], axis=1)
+        else:
+            dist_argsort = np.argsort(dist_mat, axis=1)
+
+        dist_argsort = dist_argsort[:, :k]
+        self.matching['knn'] = [dist_argsort[ii, :].tolist() for ii in range(self.n1)]
+        return self.matching['knn']
+
     def _jr_clustering(self, matching, n_clusters, n_components=20, mismatch_prob=0.1, max_iter=50, tol=1e-5,
                        verbose=True):
         """
@@ -619,7 +636,7 @@ class Mario(object):
         assert match_utils.is_perfect_matching(matching)
 
         df1_aligned, df2_aligned = self._align_modalities(matching)
-        _, cca = utils.get_cancor(df1_aligned, df2_aligned, n_components)
+        _, cca = embed.get_cancor(df1_aligned, df2_aligned, n_components)
         df1_cca, df2_cca = cca.transform(df1_aligned, df2_aligned)
         # df1_cca = df1_cca / np.std(df1_cca, axis=0)
         # df2_cca = df2_cca / np.std(df2_cca, axis=0)
@@ -685,7 +702,7 @@ class Mario(object):
 
         if n_components > min(self.p1, self.p2):
             warnings.warn('n_components must be <= the dimensions of the two datasets, '
-                            'set it to be equal to the minimum of the dimensions of the two datasets')
+                          'set it to be equal to the minimum of the dimensions of the two datasets')
             n_components = min(self.p1, self.p2)
 
         mismatch_prob = 0.5 - np.sqrt(4 - 8 * bad_prop) / 4
@@ -709,3 +726,195 @@ class Mario(object):
         self.matching['final'] = good_matching
 
         return self.matching['final']
+
+
+def pipelined_mario(data_lst, normalization=True, n_batches=4,
+                    n_matched_per_cell=1, sparsity_ovlp=None, sparsity_all=None,
+                    n_components_ovlp=20, n_components_all=20,
+                    n_cancor=5, n_wts=10,
+                    n_clusters=10, n_components_filter=10, bad_prop=0.1, max_iter_filter=20,
+                    knn=5, embed_dim=20, max_iter_embed=500, save_path='.', verbose=True):
+    """Run the whole Mario pipeline.
+
+    Parameters
+    ----------
+    data_lst : list
+        A list of array-likes, the i-th entry is an array-like of shape (ni, pi);
+        will match data_lst[0] with data_lst[i] for i>=1.
+    normalization : bool, default=True
+        If true, center each column and scale each column to have unit standard deviation.
+    n_batches : int, default=4
+        Randomly cut data_list[0] into batches and match each batch to the rest of datasets.
+    n_matched_per_cell : int
+        How many cells in the second dataset are to be matched with one cell in the first dataset.
+    sparsity_ovlp : int or None
+        Sparsity level for matching with overlapping features.
+    sparsity_all : int or None
+        Sparsity level for matching with all features.
+    n_components_ovlp : int, default=20
+        Number of SVD components when calculating the distance matrix using overlapping features.
+    n_components_all : int, default=20
+        Number of CCA components when calculating the distance matrix using all the features.
+    n_cancor : int, default=5
+        Use the mean of top canonical correlations to choose the best interpolated matching.
+    n_wts : int, default=10
+        True n_wts-many evenly-spaced weights.
+    n_clusters : int, default=10
+        Number of clusters when doing regularized filtering.
+    n_components_filter : int, default=10
+        Number of SVD components when doing regularized filtering.
+    bad_prop : float, default=0.1
+        Approximate proportion of bad matches to be filtered out.
+    max_iter_filter : int default=20
+        Maximum iteration when doing filtering.
+    knn : int, default=5
+        Number of nearest neighbors when doing k-nn matching.
+    embed_dim : int, default=20
+        Number of CCA components when calculating joint embeddings.
+    max_iter_embed : int, default=1000
+        Number of maximum GCCA iterations.
+    save_path : str, default='.'
+        The path to save the results, will be created if not exist.
+        final_matching and knn_matching will be stored in arrays of shape (n0, len(data_lst)),
+        where the first column is the original row indices of data_lst[0] (i.e., 0, 1, ..., n1-1),
+        the rest of columns are the matched cells in data_list[i] for i>=1.
+        For example, if there are three datasets, then the first row could be '0', '1,5,20', '1,5,21',
+        meaning that the first cell in data_lst[0] is matched to cells 1, 5, and 20 in data_lst[1]
+        and is matched to cells 1, 5, 21 in data_lst[2].
+        The arrays corresponding to final_matching and knn_matching will be saved at
+        'save_path/final_matching.csv' and 'save_path/knn_matching.csv', respectively.
+        The embeddings will be saved at 'save_path/embedding_i.csv' for 0 <= i < len(data_lst).
+    verbose : bool, default=True
+        Print the details if True.
+
+    Returns
+    -------
+    final_matching_lst : list
+        A list of length len(data_lst), whose i-th entry is the final matching (after interpolation and filtering)
+        from data_lst[0] to data_lst[i]. The first entry is [[0], [1], ..., [n0-1]].
+    knn_matching_lst : list
+        A list of length len(data_lst), whose i-th entry is the knn matching
+        from data_lst[0] to data_lst[i]. The first entry is [[0], [1], ..., [n0-1]].
+    embedding_lst : list
+        A list of length len(data_lst), whose i-th entry is an array-like of shape (ni, embed_dim).
+    """
+    # cut data_lst[0] into batches
+    df1 = data_lst[0]
+    df1_lst, perm_lst = match_utils.batching(df1, n_batches)
+
+    final_matching_lst = [[[i] for i in range(df1.shape[0])]]
+    knn_matching_lst = [[[i] for i in range(df1.shape[0])]]
+
+    for i in range(1, len(data_lst)):
+        if verbose:
+            print("Matching data_lst[0] with data_lst[{}]".format(i))
+        df2 = data_lst[i]
+        mario_lst = []
+        for j in range(n_batches):
+            if verbose:
+                print('Now at batch {}'.format(j))
+            mario_lst.append(Mario(df1_lst[j], df2, normalization))
+            mario_lst[j].specify_matching_params(n_matched_per_cell)
+
+        if verbose:
+            print('Matching using overlapping features...')
+        for j in range(n_batches):
+            if verbose:
+                print('Now at batch {}'.format(j))
+            _ = mario_lst[j].compute_dist_ovlp(n_components_ovlp)
+            _ = mario_lst[j].match_cells('ovlp', sparsity=sparsity_ovlp)
+
+        if verbose:
+            print('Matching using all features...')
+        for j in range(n_batches):
+            if verbose:
+                print('Now at batch {}'.format(j))
+            _ = mario_lst[j].compute_dist_all('ovlp', n_components_all)
+            _ = mario_lst[j].match_cells('all', sparsity=sparsity_all)
+
+        if verbose:
+            print('Finding the best interpolated matching...')
+        wted_dist_lst = []  # calculate weighted distance for later usage
+        for j in range(n_batches):
+            if verbose:
+                print('Now at batch {}'.format(j))
+            wt, _ = mario_lst[j].interpolate(n_wts, n_cancor, verbose=verbose)
+            wted_dist_lst.append((1 - wt) * mario_lst[j].dist['ovlp'] + wt * mario_lst[j].dist['all'])
+
+        if verbose:
+            print('Filtering bad matched pairs...')
+        for j in range(n_batches):
+            if verbose:
+                print('Now at batch {}'.format(j))
+            _ = mario_lst[j].filter_bad_matches(
+                'wted', n_clusters, n_components_filter, bad_prop,
+                max_iter=max_iter_filter, tol=1e-4, verbose=verbose
+            )
+        final_matching_lst.append(
+            match_utils.stitch(
+                perm_lst, [mario_lst[j].matching['final'] for j in range(n_batches)], df1.shape[0]
+            )
+        )
+
+        if verbose:
+            print('Do knn matching...')
+        dist_argsort = np.array(match_utils.stitch(perm_lst, wted_dist_lst, df1.shape[0]))
+        dist_argsort = np.argsort(dist_argsort, axis=1)
+        dist_argsort = dist_argsort[:, :knn]
+        knn_matching_lst.append([dist_argsort[i, :].tolist() for i in range(df1.shape[0])])
+
+    if verbose:
+        print('Calculating joint embeddings...')
+    # align all the datasets
+    data_aligned_lst = [[] for _ in range(len(data_lst))]
+    for i in range(df1.shape[0]):
+        if any([len(final_matching_lst[j][i]) == 0 for j in range(len(data_lst))]):
+            continue
+        for j in range(len(data_lst)):
+            if len(final_matching_lst[j][i]) == 1:
+                data_aligned_lst[j].append(data_lst[j].iloc[final_matching_lst[j][i][0], :])
+            else:
+                data_aligned_lst[j].append(np.mean(data_lst[j].iloc[final_matching_lst[j][i], :], axis=0))
+    data_aligned_lst = [np.array(each) for each in data_aligned_lst]
+
+    if len(data_lst) == 2:
+        _, cca = embed.get_cancor(data_aligned_lst[0], data_aligned_lst[1], embed_dim, max_iter=1000)
+        df1_cca, df2_cca = cca.transform(data_aligned_lst[0], data_aligned_lst[1])
+        embedding_lst = [df1_cca, df2_cca]
+    else:
+        embedding_lst = embed.gcca(
+            data_aligned_lst, embed_dim, normalization=False, max_iter=max_iter_embed, tol=1e-3, verbose=False
+        )
+
+    if verbose:
+        print('Saving the results...')
+    os.makedirs(save_path, exist_ok=True)
+
+    def format_matching(matching):
+        res = []
+        for matched in matching:
+            if len(matched) == 0:
+                res.append('')
+            else:
+                matched = [str(i) for i in matched]
+                res.append(','.join(matched))
+        return res
+
+    matching_colnames = ['row_idx_' + str(i) for i in range(len(data_lst))]
+    final_matching_df = np.array([format_matching(matching) for matching in final_matching_lst]).T
+    final_matching_df = pd.DataFrame(final_matching_df, columns=matching_colnames)
+    final_matching_df.to_csv(save_path + '/final_matching.csv', index=False)
+
+    knn_matching_df = np.array([format_matching(matching) for matching in knn_matching_lst]).T
+    knn_matching_df = pd.DataFrame(knn_matching_df, columns=matching_colnames)
+    knn_matching_df.to_csv(save_path + '/knn_matching.csv', index=False)
+
+    embed_colnames = ['CCA_' + str(i) for i in range(embed_dim)]
+    for i in range(len(data_lst)):
+        curr_embedding = embedding_lst[i]
+        curr_embedding = pd.DataFrame(curr_embedding, columns=embed_colnames)
+        curr_embedding.to_csv(save_path + '/embedding_' + str(i) + '.csv', index=False)
+
+    if verbose:
+        print('Done!')
+    return final_matching_lst, knn_matching_lst, embedding_lst

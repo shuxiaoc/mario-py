@@ -4,6 +4,7 @@ pyproject.toml
 setup.cfg
 src/mario/__init__.py
 src/mario/cluster.py
+src/mario/embed.py
 src/mario/match.py
 src/mario/match_utils.py
 src/mario/utils.py
