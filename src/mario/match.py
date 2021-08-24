@@ -1,8 +1,7 @@
 import numpy as np
+import pandas as pd
 import warnings
 import os
-
-import pandas as pd
 from sklearn.utils.extmath import randomized_svd
 from . import match_utils, utils, embed
 from .cluster import spectral_clustering, jr_kmeans
@@ -21,8 +20,13 @@ class Mario(object):
         normalization : bool, default=True
             If true, center each column and scale each column to have unit standard deviation.
         """
-        self.min_dist = 1e-5
+        # convert df1 and df2 to dataframe if they are not
+        if not isinstance(df1, pd.DataFrame):
+            df1 = pd.DataFrame(df1)
+        if not isinstance(df2, pd.DataFrame):
+            df2 = pd.DataFrame(df2)
 
+        self.min_dist = 1e-5
         # parameters related to datasets
         if normalization:
             self.df1 = utils.normalize(df1)
@@ -266,9 +270,9 @@ class Mario(object):
 
             X.append(self.df1.iloc[ii, :])
             if len(matching[ii]) == 1:
-                Y.append(self.df2.iloc[matching[ii][0], :])
+                Y.append(self.df2.iloc[matching[ii][0]])
             else:
-                Y.append(self.df2.iloc[matching[ii], :].mean(axis=0))
+                Y.append(self.df2.iloc[matching[ii]].mean(axis=0))
 
         X = np.array(X)
         Y = np.array(Y)
@@ -414,7 +418,7 @@ class Mario(object):
 
         for ii in range(n_sim):
             if verbose:
-                print("Random sign flip, round {}...".format(ii))
+                print("Random sign flip, round {}...".format(ii), flush=True)
             max_trial = 100
             # looks like we may get SVD not converge error
             # and it is due to linear algebra libraries in the linux server
@@ -495,7 +499,7 @@ class Mario(object):
         pval_all = 0
         for i in range(subsample_rounds):
             if verbose and subsample_prop < 1:
-                print(f"Now at subsample round {i}...")
+                print(f"Now at subsample round {i}...", flush=True)
             curr_pval_ovlp, curr_pval_all = self._matchable(n_sim, top_k, flip_prob, subsample_prop, verbose)
             pval_ovlp += curr_pval_ovlp
             pval_all += curr_pval_all
@@ -528,7 +532,7 @@ class Mario(object):
         max_cancor = float('-inf')
         for ii in range(n_wts):
             if verbose:
-                print('Now at iteration {}, wt={}'.format(ii, wt_vec[ii]))
+                print('Now at iteration {}, wt={}'.format(ii, wt_vec[ii]), flush=True)
             if ii == 0:
                 # curr_dist = self.dist['ovlp']
                 curr_matching = self.matching['ovlp']
@@ -549,7 +553,7 @@ class Mario(object):
                     if verbose:
                         print(
                             'Current sparsity config '
-                            'is too sparse, finding a suitable sparsity level...'
+                            'is too sparse, finding a suitable sparsity level...', flush=True
                         )
                     _, curr_sparsity = self.search_minimum_sparsity(
                         curr_dist, slackness=200, init_sparsity=curr_sparsity + 1, verbose=verbose
@@ -733,7 +737,7 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
                     n_components_ovlp=20, n_components_all=20,
                     n_cancor=5, n_wts=10,
                     n_clusters=10, n_components_filter=10, bad_prop=0.1, max_iter_filter=20,
-                    knn=5, embed_dim=20, max_iter_embed=500, save_path='.', verbose=True):
+                    knn=5, embed_dim=20, max_iter_embed=500, save_path='.', verbose=False):
     """Run the whole Mario pipeline.
 
     Parameters
@@ -798,6 +802,11 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
     embedding_lst : list
         A list of length len(data_lst), whose i-th entry is an array-like of shape (ni, embed_dim).
     """
+    # convert datasets into dataframe if they are not
+    for i in range(len(data_lst)):
+        if not isinstance(data_lst[i], pd.DataFrame):
+            data_lst[i] = pd.DataFrame(data_lst[i])
+
     # cut data_lst[0] into batches
     df1 = data_lst[0]
     df1_lst, perm_lst = match_utils.batching(df1, n_batches)
@@ -806,46 +815,41 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
     knn_matching_lst = [[[i] for i in range(df1.shape[0])]]
 
     for i in range(1, len(data_lst)):
-        if verbose:
-            print("Matching data_lst[0] with data_lst[{}]".format(i))
+        print("Matching data_lst[0] with data_lst[{}]".format(i), flush=True)
         df2 = data_lst[i]
         mario_lst = []
         for j in range(n_batches):
             if verbose:
-                print('Now at batch {}'.format(j))
+                print('Now at batch {}'.format(j), flush=True)
             mario_lst.append(Mario(df1_lst[j], df2, normalization))
             mario_lst[j].specify_matching_params(n_matched_per_cell)
 
-        if verbose:
-            print('Matching using overlapping features...')
+        print('Matching using overlapping features...', flush=True)
         for j in range(n_batches):
             if verbose:
-                print('Now at batch {}'.format(j))
+                print('Now at batch {}'.format(j), flush=True)
             _ = mario_lst[j].compute_dist_ovlp(n_components_ovlp)
             _ = mario_lst[j].match_cells('ovlp', sparsity=sparsity_ovlp)
 
-        if verbose:
-            print('Matching using all features...')
+        print('Matching using all features...', flush=True)
         for j in range(n_batches):
             if verbose:
-                print('Now at batch {}'.format(j))
+                print('Now at batch {}'.format(j), flush=True)
             _ = mario_lst[j].compute_dist_all('ovlp', n_components_all)
             _ = mario_lst[j].match_cells('all', sparsity=sparsity_all)
 
-        if verbose:
-            print('Finding the best interpolated matching...')
+        print('Finding the best interpolated matching...', flush=True)
         wted_dist_lst = []  # calculate weighted distance for later usage
         for j in range(n_batches):
             if verbose:
-                print('Now at batch {}'.format(j))
+                print('Now at batch {}'.format(j), flush=True)
             wt, _ = mario_lst[j].interpolate(n_wts, n_cancor, verbose=verbose)
             wted_dist_lst.append((1 - wt) * mario_lst[j].dist['ovlp'] + wt * mario_lst[j].dist['all'])
 
-        if verbose:
-            print('Filtering bad matched pairs...')
+        print('Filtering bad matched pairs...', flush=True)
         for j in range(n_batches):
             if verbose:
-                print('Now at batch {}'.format(j))
+                print('Now at batch {}'.format(j), flush=True)
             _ = mario_lst[j].filter_bad_matches(
                 'wted', n_clusters, n_components_filter, bad_prop,
                 max_iter=max_iter_filter, tol=1e-4, verbose=verbose
@@ -856,15 +860,13 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
             )
         )
 
-        if verbose:
-            print('Do knn matching...')
+        print('Do knn matching...', flush=True)
         dist_argsort = np.array(match_utils.stitch(perm_lst, wted_dist_lst, df1.shape[0]))
         dist_argsort = np.argsort(dist_argsort, axis=1)
         dist_argsort = dist_argsort[:, :knn]
         knn_matching_lst.append([dist_argsort[i, :].tolist() for i in range(df1.shape[0])])
 
-    if verbose:
-        print('Calculating joint embeddings...')
+    print('Calculating joint embeddings...', flush=True)
     # align all the datasets
     data_aligned_lst = [[] for _ in range(len(data_lst))]
     for i in range(df1.shape[0]):
@@ -886,8 +888,7 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
             data_aligned_lst, embed_dim, normalization=False, max_iter=max_iter_embed, tol=1e-3, verbose=False
         )
 
-    if verbose:
-        print('Saving the results...')
+    print('Saving the results...', flush=True)
     os.makedirs(save_path, exist_ok=True)
 
     def format_matching(matching):
@@ -915,6 +916,5 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
         curr_embedding = pd.DataFrame(curr_embedding, columns=embed_colnames)
         curr_embedding.to_csv(save_path + '/embedding_' + str(i) + '.csv', index=False)
 
-    if verbose:
-        print('Done!')
+    print('Done!', flush=True)
     return final_matching_lst, knn_matching_lst, embedding_lst

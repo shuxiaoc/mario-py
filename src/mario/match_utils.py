@@ -62,7 +62,7 @@ def search_minimum_sparsity(dist_mat, slackness, init_sparsity,
         if verbose:
             print(
                 'If sparsity>={}, then there is a valid matching; '
-                'if sparsity<{}, then there is no valid matching.'.format(k_right, k_left)
+                'if sparsity<{}, then there is no valid matching.'.format(k_right, k_left), flush=True
             )
         if cnt == 0 and init_sparsity is not None:
             k = init_sparsity
@@ -104,7 +104,7 @@ def search_minimum_sparsity(dist_mat, slackness, init_sparsity,
     if verbose:
         print(
             'If sparsity>={}, then there is a valid matching; '
-            'if sparsity<{}, then there is no valid matching.'.format(k_right, k_left)
+            'if sparsity<{}, then there is no valid matching.'.format(k_right, k_left), flush=True
         )
     return k_left, k_right
 

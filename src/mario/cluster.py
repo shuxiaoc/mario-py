@@ -274,7 +274,7 @@ def jr_kmeans(X, init_cluster_labels, n_clusters,
 
         if verbose:
             print("Now at iteration {}, "
-                  "current loss is {}.".format(ii, loss))
+                  "current loss is {}.".format(ii, loss), flush=True)
 
         if np.abs(prev_loss - loss) < tol:
             centroids = [compute_centroids(

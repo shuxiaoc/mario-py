@@ -101,7 +101,7 @@ def gcca_refine(data_list, init_scores, max_iter=500, tol=1e-3, verbose=True):
     all_scores = np.array([np.empty_like(init_scores[0])] * m)
     for ii in range(n_components):
         if verbose:
-            print("Computing the {}-th canonical score...".format(ii))
+            print("Computing the {}-th canonical score...".format(ii), flush=True)
         # regress out the influence of all_score[:, :, :ii]
         if ii > 0:
             curr_data_list = []
@@ -135,7 +135,7 @@ def gcca_refine(data_list, init_scores, max_iter=500, tol=1e-3, verbose=True):
                 obj += np.sqrt(np.sum((curr_scores[jj] - curr_scores[jj + 1]) ** 2))
 
             if verbose and iter_idx % 50 == 0:
-                print("At iteration {}, the objective value is {}.".format(iter_idx, obj))
+                print("At iteration {}, the objective value is {}.".format(iter_idx, obj), flush=True)
 
             if abs(obj - prev_obj) < tol:
                 break
@@ -143,7 +143,7 @@ def gcca_refine(data_list, init_scores, max_iter=500, tol=1e-3, verbose=True):
                 prev_obj = obj
 
         if verbose:
-            print("Finished computing the {}-th canonical score, the objective is {}.".format(ii, obj))
+            print("Finished computing the {}-th canonical score, the objective is {}.".format(ii, obj), flush=True)
 
         for jj in range(m):
             if n_components == 1:
