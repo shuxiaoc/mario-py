@@ -284,8 +284,9 @@ class Mario(object):
 
         Parameters
         ----------
-        matching : list
-            A list of (potentially variable length) lists;
+        matching : str or list
+            Either 'ovlp', 'all', 'wted', 'final', or 'knn',
+            or a list of (potentially variable length) lists;
             it holds that the i-th row in the first dataset is matched to the res[i]-th row in the second dataset.
         n_components : int
             Number of components for CCA.
@@ -303,8 +304,10 @@ class Mario(object):
             warnings.warn('n_components must be <= the dimensions of the two datasets, '
                           'set it to be equal to the minimum of the dimensions of the two datasets')
             n_components = min(self.p1, self.p2)
-
-        X, Y = self._align_modalities(matching)
+        if isinstance(matching, str):
+            X, Y = self._align_modalities(self.matching[matching])
+        else:
+            X, Y = self._align_modalities(matching)
         cancor, cca = embed.get_cancor(X, Y, n_components, max_iter)
 
         return cancor, cca
@@ -697,7 +700,7 @@ class Mario(object):
             If for some i, matching[i] is an empty list, it means that i is bad and has been filtered out.
         """
 
-        # proportion of good cells is approximately (1-mismatch_prob)^2 + mismatch_prob^2,
+        # proportion of good cells is approximately (1-mismatch_prob)^2 + mismatch_prob^2/(n_clusters-1),
         # this is because the model says that a cluster label flips w.p. mismatch_prob
         # and we declare a pair to be good if either (1) both not flipped, or (2) both flipped
         # so given bad_prop, can solve for the corresponding mismatch_prob
@@ -709,7 +712,7 @@ class Mario(object):
                           'set it to be equal to the minimum of the dimensions of the two datasets')
             n_components = min(self.p1, self.p2)
 
-        mismatch_prob = 0.5 - np.sqrt(4 - 8 * bad_prop) / 4
+        mismatch_prob = (1 - np.sqrt(1 - 2*bad_prop*(1+1/(n_clusters-1)))) / (1 + 1/(n_clusters-1))
 
         if isinstance(matching, str):
             if matching not in self.matching or self.matching[matching] is None:

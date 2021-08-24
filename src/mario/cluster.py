@@ -170,7 +170,7 @@ def jr_kmeans_one_step(X, init_cluster_labels, n_clusters, mismatch_prob=0.1):
     ind_cluster_labels = np.zeros((L, n), dtype=np.int64)
     glob_cluster_labels = np.zeros(n, dtype=np.int64)
 
-    reg_param = np.log(mismatch_prob/(1-mismatch_prob))
+    reg_param = np.log((mismatch_prob/(n_clusters-1))/(1-mismatch_prob))
 
     final_loss = 0
     for i in range(n):
@@ -226,7 +226,7 @@ def jr_kmeans(X, init_cluster_labels, n_clusters,
 
     The objective function is
     sum_{l} sum_{i} 0.5* || X[l, i, :] - centroids[l, zl[i], :] ||^2
-    + log[(1-mismatch_prob)/mismatch_prob] * indicator(zl[i] != zstar[i]).
+    + log[(1-mismatch_prob/(n_clusters-1))/mismatch_prob] * indicator(zl[i] != zstar[i]).
 
     Parameters
     ----------
