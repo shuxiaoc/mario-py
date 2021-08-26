@@ -132,7 +132,7 @@ def jr_kmeans_one_step(X, init_cluster_labels, n_clusters, mismatch_prob=0.1):
     Given initial cluster labels, say z1, ..., zL, this function computes the initial centroids
     and solves for the next z1, ..., zL, zstar such that the objective function
     sum_{l} sum_{i} 0.5 * || X[l, i, :] - centroids[l, zl[i], :] ||^2
-    + log[(1-mismatch_prob)/mismatch_prob] * indicator(zl[i] != zstar[i])
+    + log[(1-mismatch_prob)/(mismatch_prob/(n_clusters-1))] * indicator(zl[i] != zstar[i])
     is minimized.
 
     Parameters
