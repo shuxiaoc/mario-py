@@ -1,17 +1,13 @@
----
-title: "Tutorial on Mario-R"
-author: "someone"
-date: "8/26/2021"
-output: rmarkdown::github_document
----
-```{r setup, include=FALSE} 
-knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
-```
+Tutorial on Mario-R
+================
+someone
+8/26/2021
 
 **We can copy everything in mario-py tutorial here.**
 
 We will use `reticulate` to call modules from `mario-py`.
-```{r}
+
+``` r
 library(reticulate)
 library(tidyverse)
 use_python("/Users/shuxiaochen/miniconda3/envs/cell/bin/python") # specify the python under which mario-py is installed
@@ -23,10 +19,11 @@ int = as.integer # need to manually convert numeric to integer when using reticu
 
 # Exploratory analysis with subsampled data
 
-*INSERT MORE DETAILS.* We use subsampled data to select hyperparameters, test for matchability, etc.
-Also, need to explain the meanings of each argument
+*INSERT MORE DETAILS.* We use subsampled data to select hyperparameters,
+test for matchability, etc. Also, need to explain the meanings of each
+argument
 
-```{r}
+``` r
 # import and subsample data
 df1 <- read_csv("/Users/shuxiaochen/Dropbox/Research/ongoing/single-cell-integration/data-biology/drop_out_test/vaxaart-wb50k-cytof.csv") %>% select(-X1)
 df2 <- read_csv("/Users/shuxiaochen/Dropbox/Research/ongoing/single-cell-integration/data-biology/drop_out_test/wcctg-wb50k-cytof.csv") %>% select(-X1)
@@ -47,51 +44,62 @@ df1_sub <- df1_sub %>% select(-cluster.info)
 df2_sub <- df2_sub %>% select(-cluster.info)
 ```
 
-
 ## Initial matching with overlapping features
-```{r}
+
+``` r
 mario = Mario(df1_sub, df2_sub, normalization = TRUE)
 dist_ovlp = mario$compute_dist_ovlp(n_components = int(20))
 ```
 
-```{r}
+``` r
 mario$specify_matching_params(int(1))
 ```
 
-```{r}
+``` r
 mario$search_minimum_sparsity(mario$dist$ovlp, slackness=int(1), init_sparsity=NULL, verbose=TRUE)
 ```
 
-```{r}
+    ## [[1]]
+    ## [1] 13
+    ## 
+    ## [[2]]
+    ## [1] 14
+
+``` r
 matching_ovlp = mario$match_cells('ovlp', sparsity=int(100), mode='auto')
 ```
 
-
 ## matching using all features
-```{r}
+
+``` r
 dist_all = mario$compute_dist_all(matching = 'ovlp', n_components = int(15))
 ```
 
-```{r}
+``` r
 matching_all = mario$match_cells(dist_mat = 'all', sparsity=NULL, mode='auto')
 ```
 
-
 ## Testing for matchability
 
-```{r}
+``` r
 mario$matchable(n_sim=int(5), top_k=int(5), flip_prob=0.3, subsample_prop=int(1), verbose=TRUE)
 ```
 
+    ## [[1]]
+    ## [1] 0
+    ## 
+    ## [[2]]
+    ## [1] 0
+
 ## Finding the best interpolation
 
-```{r}
+``` r
 interpolate_res = mario$interpolate(n_wts=int(5), top_k=int(5), verbose=TRUE)
 ```
 
 ## Filtering low-quality matched pairs
 
-```{r}
+``` r
 matching_final  = mario$filter_bad_matches(
   matching='wted', n_clusters=int(10), n_components=int(10), bad_prop=0.2,
   max_iter=int(5), tol=1e-5, verbose=TRUE)
@@ -99,12 +107,13 @@ matching_final  = mario$filter_bad_matches(
 
 ## k-NN matching
 
-```{r}
+``` r
 matching_knn = mario$knn_matching('wted', k=int(5))
 ```
 
 ## Joint embedding
-```{r}
+
+``` r
 cca_res = mario$fit_cca('final', n_components=as.integer(20), max_iter=as.integer(10000))
 df1_cca = cca_res[[2]]$x_scores_
 df2_cca = cca_res[[2]]$y_scores_
@@ -112,7 +121,7 @@ df2_cca = cca_res[[2]]$y_scores_
 
 # Full pipeline
 
-```{r eval=FALSE}
+``` r
 pipelined_mario = mario.match$pipelined_mario
 pipelined_res = pipelined_mario(
   data_lst=list(df1, df2), normalization=TRUE, n_batches=int(4),
