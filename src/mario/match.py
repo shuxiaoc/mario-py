@@ -740,7 +740,7 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
                     n_components_ovlp=20, n_components_all=20,
                     n_cancor=5, n_wts=10,
                     n_clusters=10, n_components_filter=10, bad_prop=0.1, max_iter_filter=20,
-                    knn=5, embed_dim=20, max_iter_embed=500, save_path='.', verbose=False):
+                    knn=False, embed_dim=20, max_iter_embed=500, save_path='.', verbose=False):
     """Run the whole Mario pipeline.
 
     Parameters
@@ -774,8 +774,8 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
         Approximate proportion of bad matches to be filtered out.
     max_iter_filter : int default=20
         Maximum iteration when doing filtering.
-    knn : int, default=5
-        Number of nearest neighbors when doing k-nn matching.
+    knn : bool or int, default=False
+        If is an integer k, run k-nn matching.
     embed_dim : int, default=20
         Number of CCA components when calculating joint embeddings.
     max_iter_embed : int, default=1000
@@ -788,7 +788,7 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
         For example, if there are three datasets, then the first row could be '0', '1,5,20', '1,5,21',
         meaning that the first cell in data_lst[0] is matched to cells 1, 5, and 20 in data_lst[1]
         and is matched to cells 1, 5, 21 in data_lst[2].
-        The arrays corresponding to final_matching and knn_matching will be saved at
+        The arrays corresponding to final_matching and knn_matching (if knn is not False) will be saved at
         'save_path/final_matching.csv' and 'save_path/knn_matching.csv', respectively.
         The embeddings will be saved at 'save_path/embedding_i.csv' for 0 <= i < len(data_lst).
     verbose : bool, default=True
@@ -802,6 +802,7 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
     knn_matching_lst : list
         A list of length len(data_lst), whose i-th entry is the knn matching
         from data_lst[0] to data_lst[i]. The first entry is [[0], [1], ..., [n0-1]].
+        When knn=False, this list is not returned.
     embedding_lst : list
         A list of length len(data_lst), whose i-th entry is an array-like of shape (ni, embed_dim).
     """
@@ -815,61 +816,51 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
     df1_lst, perm_lst = match_utils.batching(df1, n_batches)
 
     final_matching_lst = [[[i] for i in range(df1.shape[0])]]
-    knn_matching_lst = [[[i] for i in range(df1.shape[0])]]
+    do_knn = (not isinstance(knn, bool)) and isinstance(knn, int) and knn >= 1
+    if do_knn:
+        knn_matching_lst = [[[i] for i in range(df1.shape[0])]]
 
     for i in range(1, len(data_lst)):
         print("Matching data_lst[0] with data_lst[{}]".format(i), flush=True)
         df2 = data_lst[i]
-        mario_lst = []
+        matching_per_batch = []
+        if do_knn:
+            wted_dist_lst = []  # calculate weighted distance for later usage
         for j in range(n_batches):
-            if verbose:
-                print('Now at batch {}'.format(j), flush=True)
-            mario_lst.append(Mario(df1_lst[j], df2, normalization))
-            mario_lst[j].specify_matching_params(n_matched_per_cell)
-
-        print('Matching using overlapping features...', flush=True)
-        for j in range(n_batches):
-            if verbose:
-                print('Now at batch {}'.format(j), flush=True)
-            _ = mario_lst[j].compute_dist_ovlp(n_components_ovlp)
-            _ = mario_lst[j].match_cells('ovlp', sparsity=sparsity_ovlp)
-
-        print('Matching using all features...', flush=True)
-        for j in range(n_batches):
-            if verbose:
-                print('Now at batch {}'.format(j), flush=True)
-            _ = mario_lst[j].compute_dist_all('ovlp', n_components_all)
-            _ = mario_lst[j].match_cells('all', sparsity=sparsity_all)
-
-        print('Finding the best interpolated matching...', flush=True)
-        wted_dist_lst = []  # calculate weighted distance for later usage
-        for j in range(n_batches):
-            if verbose:
-                print('Now at batch {}'.format(j), flush=True)
-            wt, _ = mario_lst[j].interpolate(n_wts, n_cancor, verbose=verbose)
-            wted_dist_lst.append((1 - wt) * mario_lst[j].dist['ovlp'] + wt * mario_lst[j].dist['all'])
-
-        print('Filtering bad matched pairs...', flush=True)
-        for j in range(n_batches):
-            if verbose:
-                print('Now at batch {}'.format(j), flush=True)
-            _ = mario_lst[j].filter_bad_matches(
+            print('Now at batch {}'.format(j), flush=True)
+            mario = Mario(df1_lst[j], df2, normalization)
+            print('Matching using overlapping features...', flush=True)
+            mario.specify_matching_params(n_matched_per_cell)
+            _ = mario.compute_dist_ovlp(n_components_ovlp)
+            _ = mario.match_cells('ovlp', sparsity=sparsity_ovlp)
+            print('Matching using all features...', flush=True)
+            _ = mario.compute_dist_all('ovlp', n_components_all)
+            _ = mario.match_cells('all', sparsity=sparsity_all)
+            print('Finding the best interpolated matching...', flush=True)
+            wt, _ = mario.interpolate(n_wts, n_cancor, verbose=verbose)
+            if do_knn:
+                wted_dist_lst.append((1 - wt) * mario.dist['ovlp'] + wt * mario.dist['all'])
+            print('Filtering bad matched pairs...', flush=True)
+            _ = mario.filter_bad_matches(
                 'wted', n_clusters, n_components_filter, bad_prop,
                 max_iter=max_iter_filter, tol=1e-4, verbose=verbose
             )
+            matching_per_batch.append(mario.matching['final'])
+
+        print('Stitching batch-wise matchings together...', flush=True)
         final_matching_lst.append(
             match_utils.stitch(
-                perm_lst, [mario_lst[j].matching['final'] for j in range(n_batches)], df1.shape[0]
+                perm_lst, [matching_per_batch[j] for j in range(n_batches)], df1.shape[0]
             )
         )
+        if do_knn:
+            print('Do knn matching...', flush=True)
+            dist_argsort = np.array(match_utils.stitch(perm_lst, wted_dist_lst, df1.shape[0]))
+            dist_argsort = np.argsort(dist_argsort, axis=1)
+            dist_argsort = dist_argsort[:, :knn]
+            knn_matching_lst.append([dist_argsort[i, :].tolist() for i in range(df1.shape[0])])
 
-        print('Do knn matching...', flush=True)
-        dist_argsort = np.array(match_utils.stitch(perm_lst, wted_dist_lst, df1.shape[0]))
-        dist_argsort = np.argsort(dist_argsort, axis=1)
-        dist_argsort = dist_argsort[:, :knn]
-        knn_matching_lst.append([dist_argsort[i, :].tolist() for i in range(df1.shape[0])])
-
-    print('Calculating joint embeddings...', flush=True)
+    print('Matching is done, calculating joint embeddings...', flush=True)
     # align all the datasets
     data_aligned_lst = [[] for _ in range(len(data_lst))]
     for i in range(df1.shape[0]):
@@ -909,9 +900,10 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
     final_matching_df = pd.DataFrame(final_matching_df, columns=matching_colnames)
     final_matching_df.to_csv(save_path + '/final_matching.csv', index=False)
 
-    knn_matching_df = np.array([format_matching(matching) for matching in knn_matching_lst]).T
-    knn_matching_df = pd.DataFrame(knn_matching_df, columns=matching_colnames)
-    knn_matching_df.to_csv(save_path + '/knn_matching.csv', index=False)
+    if do_knn:
+        knn_matching_df = np.array([format_matching(matching) for matching in knn_matching_lst]).T
+        knn_matching_df = pd.DataFrame(knn_matching_df, columns=matching_colnames)
+        knn_matching_df.to_csv(save_path + '/knn_matching.csv', index=False)
 
     embed_colnames = ['CCA_' + str(i) for i in range(embed_dim)]
     for i in range(len(data_lst)):
@@ -920,4 +912,7 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
         curr_embedding.to_csv(save_path + '/embedding_' + str(i) + '.csv', index=False)
 
     print('Done!', flush=True)
-    return final_matching_lst, knn_matching_lst, embedding_lst
+    if do_knn:
+        return final_matching_lst, knn_matching_lst, embedding_lst
+    else:
+        return final_matching_lst, embedding_lst
