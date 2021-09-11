@@ -14,6 +14,4 @@
 
 ```XCynoIFNG_mario_matched_sub20k.csv``` contains the ***matched*** cyno-ifng in the paper, subsample 20k.
 
-```balf_mph_mario_matched.csv``` contains the ***matched*** cite-seq macrophage in the paper.
-
 ```gcca_sub20k.csv``` contains the CCA scores for the integrated datasets (subsample 20k each).
