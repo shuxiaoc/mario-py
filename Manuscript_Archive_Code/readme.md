@@ -1,4 +1,6 @@
-This folder contains code and material used in paper TBD title. Including ```py_scripts``` related the usage of devlopment version of MARIO (legacy version, deposited in ```MARIO_devo_version```) in the manuscript;
+This folder contains code and material used in paper TBD title. 
+
+Including ```py_scripts``` related the usage of devlopment version of MARIO (legacy version, deposited in ```MARIO_devo_version```) in the manuscript;
 
 ```r_scripts``` involved with the analysis and figure making for the manuscript;
 
