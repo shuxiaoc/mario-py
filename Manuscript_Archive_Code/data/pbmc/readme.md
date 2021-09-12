@@ -1,15 +1,11 @@
-```clean_cells.csv``` containes the ***input*** murine spleen CODEX cells presented in the paper.
+```10xciteseq_5107.csv``` containes the ***input*** human PBMC CITE-seq cells presented in the paper.
 
-```citeMurine-206ForMatch-0423_whole2x.csv``` containes the ***input*** murine spleen CITE-seq cells data (duplicated to 2x comparing to the totalVI paper) presented in the paper.
+```felixcytof_38866.csv``` containes the ***input*** human PBMC CODEX cells presented in the paper.
 
-```MurineCodex_mario_matched.csv``` contains the ***matched*** murine spleen CODEX cells in the paper.
+```pbmc10x_mario_matched.csv``` contains the ***matched*** human PBMC CITE-seq cells in the paper.
 
-```MurineCodex_mario_labeltrans.csv``` same files as above but with the label-transfer annotations (k = 5).
+```pbmcCytof_mario_matched.csv``` contains the ***matched*** human PBMC CYTOF cells in the paper.
 
-```MurineCiteseq_mario_matched.csv``` contains the ***matched*** murine spleen CITE-seq cells in the paper.
+```10xgenomic_cca10.csv``` contains the CCA scores for the integrated datasets (human PBMC CITE-seq cells).
 
-```cca_codex.csv``` contains the CCA scores for the integrated datasets (murine spleen CODEX cells).
-
-```cca_cite.csv``` contains the CCA scores for the integrated datasets (murine spleen CITE-seq cells).
-
-```all_clusters.csv``` original CODEX cells from murine spleen, including all cells (immune cells, non-immune cells, unannotated, dirt etc).
+```felixetal_cca10.csv``` contains the CCA scores for the integrated datasets (human PBMC CODEX cells).
