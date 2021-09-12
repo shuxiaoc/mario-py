@@ -1,15 +1,11 @@
-```zac_human_il4_120k.csv``` containes the ***input*** human-il4 challenge presented in the paper.
+```bmcite_29000.csv``` containes the ***input*** human bonemarrow CITE-seq data presented in the paper.
 
-```zac_rhesus_il4_120k.csv``` containes the ***input*** rhesus-il4 challenge presented in the paper.
+```levine32_102977.csv``` containes the ***input*** human bonemarrow CODEX data presented in the paper.
 
-```zac_cyno_il4_120k.csv``` containes the ***input*** cyno-il4 challenge presented in the paper.
+```bmcite_mario_matched.csv``` contains the ***matched*** human bonemarrow CITE-seq in the paper.
 
-```wcctHuman2_mario_matched_sub20k.csv``` contains the ***matched*** human-H1N1 in the paper, subsample 20k.
+```lv32_mario_matched.csv``` contains the ***matched*** human bonemarrow CODEX in the paper.
 
-```XhumanIL4_mario_matched_sub20k.csv``` contains the ***matched*** human-il4 in the paper, subsample 20k.
+```bmcite_cca10.csv``` contains the CCA scores for the integrated datasets (human bonemarrow CITE-seq).
 
-```XRhesusIL4_mario_matched_sub20k.csv``` contains the ***matched*** rhesus-il4 in the paper, subsample 20k.
-
-```XCynoIL4_mario_matched_sub20k.csv``` contains the ***matched*** cyno-il4 in the paper, subsample 20k.
-
-```gcca_sub20k.csv``` contains the CCA scores for the integrated datasets (subsample 20k each).
+```lv32_cca10.csv``` contains the CCA scores for the integrated datasets (human bonemarrow CYTOF).
