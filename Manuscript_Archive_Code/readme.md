@@ -8,3 +8,5 @@ Including ```py_scripts```, python scripts related the usage of MARIO (legacy/ d
 
 We also provides ```data``` which contains all the input and output of MARIO analysis used in the manuscript.
 
+```environment.yml``` contains the conda environment dependencies when running these scripts (for python only).
+
