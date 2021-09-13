@@ -27,12 +27,23 @@ delete_celltype1_[*dataset*].sh
 
 step 2:
 delete_celltypes_scan-[*dataset*].py
-# will run Scanorama (python) with dropped features
+# will run Scanorama (python) with dropped cell types.
 
 
 #### 3. Poor quality data by adding random noise
 
+step 1:
+addNoise1_[*dataset*].sh
+# will run MARIO (python), Seurat, Fastmnn, Liger (R) with increasing random noise on both datasets.
 
+step 2:
+add_noise_scan_[*dataset*].py
+# will run Scanorama (python) with increasing random noise on both datasets.
+
+### 4. figure production
+
+plot_making_script_[*dataset*].R
+# will make the figures as presented in the paper.
 
 ```
 
