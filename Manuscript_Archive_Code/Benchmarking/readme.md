@@ -2,6 +2,8 @@ Inculdes all the dependencies to perform benchmarking.
 
 Methods were implemented in their own language (Python: MARIO, Scanorama; R: Seurat, Fastmnn, Liger), and benchmarked in R (matching accuracy and multiple metrics etc).
 
+```data``` includes the files used as input for benchmarking.
+
 General steps:
 
 ```
