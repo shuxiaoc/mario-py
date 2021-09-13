@@ -19,6 +19,17 @@ step 3:
 delete_feature3_[*dataset*].sh
 # Parrallel running code for calculate_metrics.R, calculate related metrics from reduced scores (all methods)
 
+#### 2. Change cell type composition by dropping single types in DataY
+
+step 1:
+delete_celltype1_[*dataset*].sh
+# will run MARIO (python), Seurat, Fastmnn, Liger (R) with dropped cell types in dataY.
+
+step 2:
+delete_celltypes_scan-[*dataset*].py
+# will run Scanorama (python) with dropped features
+
+
 #### 3. Poor quality data by adding random noise
 
 
