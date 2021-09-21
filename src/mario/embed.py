@@ -3,7 +3,7 @@ from sklearn.cross_decomposition import CCA
 from . import utils
 
 
-def get_cancor(X, Y, n_components=10, max_iter=1000):
+def get_cancor(X, Y, n_components=10, max_iter=2000):
     """Fit CCA and calculate the canonical correlations.
 
     Parameters
@@ -58,7 +58,7 @@ def gcca_init(data_list, n_components=10, normalization=True):
         for data in data_list:
             data = utils.normalize(data)
     # run CCA on the first two data matrices
-    cca = CCA(n_components=n_components)
+    _, cca = get_cancor(data_list[0], data_list[1], n_components=n_components)
     score_list = list(cca.fit_transform(data_list[0], data_list[1]))
     avg_score = (score_list[0] + score_list[1]) / 2
     # run OLS regressions for the rest of data matrices
