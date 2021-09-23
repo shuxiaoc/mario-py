@@ -113,7 +113,7 @@ ggplot(data=dftx, aes(x=idx, y=Singular_value)) +
   geom_line() + scale_x_continuous(breaks = pretty_breaks())
 ```
 
-![](mario-r-bk_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/plots/R_fig1.png)<!-- -->
 
 We use this plot to decide how many components to use during mathcing
 with overlapping features, similar to the concept used with Elbow plots
