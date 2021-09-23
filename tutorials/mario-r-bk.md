@@ -166,7 +166,7 @@ ggplot(data=dftx, aes(x=idx, y=canonical_correlations)) +
   geom_line() + scale_x_continuous(breaks = pretty_breaks())
 ```
 
-![](mario-r-bk_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/plots/R_fig2.png)<!-- -->
 
 Based on the plot we can see a steep drop of canonical correlation at 9
 components, therefore, we should choose **\> 9** components for refined
@@ -337,7 +337,7 @@ p=ggplot(all_tsne_data_10)  +
 p
 ```
 
-![](mario-r-bk_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/plots/R_fig3.png)<!-- -->
 
 ``` r
 match_final = pipelined_res[[1]][[2]] # geting matching final list, first element is empty
@@ -354,4 +354,4 @@ p=ggplot(all_tsne_data_10)  +
 p
 ```
 
-![](mario-r-bk_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/plots/R_fig4.png)<!-- -->
