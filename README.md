@@ -14,8 +14,10 @@ An in-depth paragraph about your project and overview of use.
 
 ### Dependencies
 
+For easy usage, we suggest builing a ```conda``` virtualenv with ```python = 3.8```.
+
 ```{bash}
-conda env python 3.8
+conda create -n mario python=3.8
 ```
 
 ### Installing
