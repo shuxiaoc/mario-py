@@ -22,11 +22,20 @@ conda create -n mario python=3.8
 
 ### Installing
 
+To install ```MARIO```, we can easily install it with ```pip``` function:
+
 ```{bash}
 pip install mario-py
 ```
 
-### Executing program
+You can also directly build the package by cloning the github repo:
 
-* How to run the program
-* Step-by-step bullets
+```{bash}
+git clone https://github.com/shuxiaoc/mario-py.git
+cd mario-py/
+python setup.py install --user
+```
+### Troubleshooting
+
+* q1
+* q2
