@@ -1,4 +1,4 @@
-# mario-py
+# MARIO single-cell proteomic data matching and integration pipeline
 
 `mario-py` is a Python package for matching and integrating multi-modal single cell data with partially overlapping features.
 
