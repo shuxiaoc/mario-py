@@ -810,8 +810,8 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
     for i in range(len(data_lst)):
         if not isinstance(data_lst[i], pd.DataFrame):
             data_lst[i] = pd.DataFrame(data_lst[i])
-            if normalization:
-                data_lst[i] = utils.normalize(data_lst[i])
+        if normalization:
+            data_lst[i] = utils.normalize(data_lst[i])
 
     # cut data_lst[0] into batches
     df1 = data_lst[0]
