@@ -13,7 +13,7 @@ step 1:
 delete_feature1_[*dataset*].sh
 # will run MARIO (python), Seurat, Fastmnn, Liger (R) with dropped features
 
-step 2:
+step 2: (Run in scanorama virtualenv)
 delete_feature_scan-[*dataset*].py
 # will run Scanorama (python) with dropped features
 
