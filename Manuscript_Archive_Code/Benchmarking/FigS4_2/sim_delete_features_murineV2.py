@@ -162,23 +162,20 @@ if __name__ == "__main__":
     df2 = df2.drop('label', 1)
 
     features_to_delete = [
-        "CD1632",
-        "F480",
-        "Ly6G",
-        "Ly6C",
-        "CD2135",
+        "B220",
+        "CD106",
         "CD11b",
         "CD11c",
-        "CD5",
+        "CD1632",
+        "CD169",
         "CD19",
-        "IgM",
-        "IgD",
+        "CD2135",
         "CD27",
-        "TCR",
-        "NKp46",
-        "B220",
         "CD3",
-        "CD4"
+        "CD31",
+        "CD4",
+        "CD44",
+        "CD45"
     ]
 
     logging.info('Start simulation, will drop {} sequentially.'.format(features_to_delete))
