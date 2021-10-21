@@ -8,7 +8,19 @@ path = "../Benchmarking/data/feature_deletion/human_crab/"
 x = read.csv(paste0(path0,"orig_x.csv"))
 y = read.csv(paste0(path0,"orig_y.csv"))
 ## some parameters
-feature_2_delete = c('CD235a','CD123','CD1c','CD33','CD61','CD161','CD7','CD11c','CD16','CD11b','CD56','IgM','CD19')
+feature_2_delete = c('BDCA3',
+        'CCR7',
+        'CD11b',
+        'CD11c',
+        'CD123',
+        'CD14',
+        'CD16',
+        'CD161',
+        'CD19',
+        'CD1c',
+        'CD235a',
+        'CD3',
+        'CD33')
 path_out = paste0(path,"seurat/")
 feature_2_delete = c("Full",feature_2_delete)
 ## container
@@ -96,7 +108,19 @@ library(rliger)
 x = read.csv(paste0(path0,"orig_x.csv"))
 y = read.csv(paste0(path0,"orig_y.csv"))
 ## some parameters
-feature_2_delete = c('CD235a','CD123','CD1c','CD33','CD61','CD161','CD7','CD11c','CD16','CD11b','CD56','IgM','CD19')
+feature_2_delete = c('BDCA3',
+        'CCR7',
+        'CD11b',
+        'CD11c',
+        'CD123',
+        'CD14',
+        'CD16',
+        'CD161',
+        'CD19',
+        'CD1c',
+        'CD235a',
+        'CD3',
+        'CD33')
 path_out = paste0(path,"liger/")
 feature_2_delete = c("Full",feature_2_delete)
 ## container
@@ -163,7 +187,19 @@ library(batchelor)
 x = read.csv(paste0(path0,"orig_x.csv"))
 y = read.csv(paste0(path0,"orig_y.csv"))
 ## some parameters
-feature_2_delete = c('CD235a','CD123','CD1c','CD33','CD61','CD161','CD7','CD11c','CD16','CD11b','CD56','IgM','CD19')
+feature_2_delete = c('BDCA3',
+        'CCR7',
+        'CD11b',
+        'CD11c',
+        'CD123',
+        'CD14',
+        'CD16',
+        'CD161',
+        'CD19',
+        'CD1c',
+        'CD235a',
+        'CD3',
+        'CD33')
 path_out = paste0(path,"fstmnn/")
 feature_2_delete = c("Full",feature_2_delete)
 ## container
