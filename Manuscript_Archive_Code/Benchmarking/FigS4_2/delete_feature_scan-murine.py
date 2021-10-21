@@ -10,7 +10,20 @@ path = "../Benchmarking/data/feature_deletion/murine/"
 x = pd.read_csv(path0+"orig_x.csv")
 y = pd.read_csv(path0+"orig_y.csv")
 ## some parameters
-feature_2_delete = ["CD1632","F480","Ly6G","Ly6C","CD2135","CD11b","CD11c","CD5","CD19","IgM","IgD","CD27","TCR","NKp46","B220","CD3","CD4"]
+feature_2_delete = ["B220",
+        "CD106",
+        "CD11b",
+        "CD11c",
+        "CD1632",
+        "CD169",
+        "CD19",
+        "CD2135",
+        "CD27",
+        "CD3",
+        "CD31",
+        "CD4",
+        "CD44",
+        "CD45",]
 #feature_2_delete = []
 path_out = path + "scan/"
 feature_2_delete.insert(0, 'Full')
