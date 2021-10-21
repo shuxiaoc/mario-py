@@ -10,7 +10,19 @@ path = "../Benchmarking/data/feature_deletion/human_crab_il4/"
 x = pd.read_csv(path0+"orig_x.csv")
 y = pd.read_csv(path0+"orig_y.csv")
 ## some parameters
-feature_2_delete = ['CD235a','CD123','CD1c','CD33','CD61','CD161','CD7','CD11c','CD16','CD11b','CD56','IgM','CD19']
+feature_2_delete = ['BDCA3',
+        'CCR7',
+        'CD11b',
+        'CD11c',
+        'CD123',
+        'CD14',
+        'CD16',
+        'CD161',
+        'CD19',
+        'CD1c',
+        'CD235a',
+        'CD3',
+        'CD33']
 #feature_2_delete = []
 path_out = path + "scan/"
 feature_2_delete.insert(0, 'Full')
