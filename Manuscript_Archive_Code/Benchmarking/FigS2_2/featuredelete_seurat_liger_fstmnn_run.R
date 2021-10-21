@@ -8,7 +8,15 @@ path = "../Benchmarking/data/feature_deletion/bm_levine/"
 x = read.csv(paste0(path0,"orig_x.csv")) # read in the same cells tested by MARIO
 y = read.csv(paste0(path0,"orig_y.csv")) # read in the same cells tested by MARIO
 ## some parameters
-feature_2_delete = c('CD38','CD34','CD123','CD45RA','HLA.DR','CD11c','CD16','CD14','CD3')
+feature_2_delete = c('CD11c',
+        'CD123',
+        'CD14',
+        'CD16',
+        'CD19',
+        'CD3',
+        'CD34',
+        'CD38',
+        'CD4')
 path_out = paste0(path,"seurat/")
 feature_2_delete = c("Full",feature_2_delete)
 ## container
@@ -92,7 +100,15 @@ library(rliger)
 x = read.csv(paste0(path0,"orig_x.csv"))
 y = read.csv(paste0(path0,"orig_y.csv"))
 ## some parameters
-feature_2_delete = c('CD38','CD34','CD123','CD45RA','HLA.DR','CD11c','CD16','CD14','CD3')
+feature_2_delete = c('CD11c',
+        'CD123',
+        'CD14',
+        'CD16',
+        'CD19',
+        'CD3',
+        'CD34',
+        'CD38',
+        'CD4')
 path_out = paste0(path,"liger/")
 feature_2_delete = c("Full",feature_2_delete)
 ## container
@@ -160,7 +176,15 @@ library(batchelor)
 x = read.csv(paste0(path0,"orig_x.csv"))
 y = read.csv(paste0(path0,"orig_y.csv"))
 ## some parameters
-feature_2_delete = c('CD38','CD34','CD123','CD45RA','HLA.DR','CD11c','CD16','CD14','CD3')
+feature_2_delete = c('CD11c',
+        'CD123',
+        'CD14',
+        'CD16',
+        'CD19',
+        'CD3',
+        'CD34',
+        'CD38',
+        'CD4')
 path_out = paste0(path,"fstmnn/")
 feature_2_delete = c("Full",feature_2_delete)
 ## container
