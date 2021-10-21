@@ -11,7 +11,15 @@ path = "../Benchmarking/data/feature_deletion/bm_levine/"
 x = pd.read_csv(path0+"orig_x.csv")
 y = pd.read_csv(path0+"orig_y.csv")
 ## some parameters
-feature_2_delete = ['CD38','CD34','CD123','CD45RA','HLA.DR','CD11c','CD16','CD14','CD3']
+feature_2_delete = ['CD11c',
+        'CD123',
+        'CD14',
+        'CD16',
+        'CD19',
+        'CD3',
+        'CD34',
+        'CD38',
+        'CD4']
 #feature_2_delete = []
 path_out = path + "scan/"
 feature_2_delete.insert(0, 'Full')
