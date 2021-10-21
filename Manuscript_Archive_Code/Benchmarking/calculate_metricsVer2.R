@@ -1,4 +1,9 @@
 #!/usr/bin/env Rscript
+
+#### modified by bokai zhu
+#### only used when calculating metrics for liger during pbmc and murine datasets
+#### due to liger auto-filtering cells during integration and need to recover orig cell ident to calculate the metrics
+
 args = commandArgs(trailingOnly=TRUE)
 
 metrics_fname = args[1]
@@ -19,7 +24,7 @@ n_idx = as.integer(args[4])
 # - kbet: mixing via k-nearest neighbour batch effect test (kBET) (the larger, the better)
 # - avg_mix: mixing metric via two sample test, averaged over all clusters (the larger, the better)
 #setwd("/home/bkzhu/SNE-multi/figure_rcode/sup_simulation/code_0713")
-setwd("/home/bkzhu/SNE-multi/figure_rcode/sup_simulation/code_0713/alphabetical")
+setwd("/home/bkzhu/SNE-multi/figure_rcode/sup_simulation/code_0713/")
 source("metricsVer2.R")
 
 # load existing metrics
