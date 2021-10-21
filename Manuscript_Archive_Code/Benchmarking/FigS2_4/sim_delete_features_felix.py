@@ -163,14 +163,14 @@ if __name__ == "__main__":
     df2 = df2.drop('label', 1)
 
     features_to_delete = [
-        "CD25",
-        "PD.1",
-        "CD127",
-        "CD197",
-        "CD56",
-        "CD16",
         "CD11b",
-        "HLA.DR",
+        "CD127",
+        "CD16",
+        "CD19",
+        "CD25",
+        "CD27",
+        "CD3",
+        "CD4",
         "CD45RA"
     ]
 
