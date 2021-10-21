@@ -10,14 +10,14 @@ path = "../Benchmarking/data/feature_deletion/felix/"
 x = pd.read_csv(path0+"orig_x.csv")
 y = pd.read_csv(path0+"orig_y.csv")
 ## some parameters
-feature_2_delete = ["CD25",
-        "PD.1",
+feature_2_delete = ["CD11b",
         "CD127",
-        "CD197",
-        "CD56",
         "CD16",
-        "CD11b",
-        "HLA.DR",
+        "CD19",
+        "CD25",
+        "CD27",
+        "CD3",
+        "CD4",
         "CD45RA"]
 #feature_2_delete = []
 path_out = path + "scan/"
