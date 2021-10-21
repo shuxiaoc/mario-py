@@ -877,7 +877,7 @@ c1qL_go$GO.biological.process.complete <- factor(c1qL_go$GO.biological.process.c
 
 
 ## go term plots
-p = ggplot(data = c1qH_go, aes(x = upload_1..fold.Enrichment., y = GO.biological.process.complete, 
+p = ggplot(data = c1qH_go[c(1:30,], aes(x = upload_1..fold.Enrichment., y = GO.biological.process.complete, 
                                color = log10(upload_1..FDR.), size = upload_1..85.)) + 
   geom_point() +
   scale_color_gradient(low = "red", high = "blue") +
@@ -886,7 +886,7 @@ p = ggplot(data = c1qH_go, aes(x = upload_1..fold.Enrichment., y = GO.biological
   xlab("") + 
   ggtitle("GO for C1qH")
 
-p2 = ggplot(data = c1qL_go, aes(x = upload_1..fold.Enrichment., y = GO.biological.process.complete, 
+p2 = ggplot(data = c1qL_go[c(1:30,], aes(x = upload_1..fold.Enrichment., y = GO.biological.process.complete, 
                                 color = log10(upload_1..FDR.), size = upload_1..106.)) + 
   geom_point() +
   scale_color_gradient(low = "red", high = "blue") +
@@ -916,3 +916,12 @@ temp12 = scale(temp12) # znorm before plotting
 cell_type_label = comp_clust # add grouping information
 cell_type_matdf = as.data.frame(cell_type_mat)
 heatmap(as.matrix(cell_type_matdf))
+## make heatmap plot
+colors = c(seq(-0.3,0.3,length=16))
+my_palette <- rev(colorRampPalette(brewer.pal(6,"YlOrRd"))(n = 15))
+hm2_call = heatmap.2(cell_type_mat,col=my_palette,breaks=colors,density.info="none",
+                     trace="none",Rowv=F,Colv=T,dendrogram="col",symm=F,labRow=cell_types,
+                     labCol=colnames(mat_markers),margins=c(0.5*(dim(cell_type_mat)[2]/dim(cell_type_mat)[1]),2),
+                     scale="none",cexRow=1,cexCol=1,rowsep=c(0:20),colsep=c(0:33),sepcolor=NA,sepwidth=c(0.0001,0.0001))
+                           
+                           
