@@ -1,5 +1,5 @@
 #### Bokai Zhu
-#### Script used to perform MARIO with the data presented in Figure S2.2
+#### Script used to perform MARIO with the data presented in Figure S1.2
 #### pbmc data from citeseq and cytof
 
 ###############
