@@ -1,5 +1,5 @@
 #### Bokai Zhu
-#### Script used to perform MARIO with the data presented in Figure S3.2
+#### Script used to perform MARIO with the data presented in Figure S2.2
 #### human whole blood sample challenged with H1N1
 #### human and non-human primate whole blood sample challenged with IL4
 
