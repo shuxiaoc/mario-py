@@ -1,6 +1,6 @@
 ### Bokai Zhu
 ### 0822-2021
-##### script related to the production of Figure S2.3 pre and post Mario analysis
+##### script related to the production of Figure S1.3 pre and post Mario analysis
 ##### (integrative analysis on 10x-5k pbmc and cytof pbmc felix et al cell report)
 
 ############################# part 1 ##################################
