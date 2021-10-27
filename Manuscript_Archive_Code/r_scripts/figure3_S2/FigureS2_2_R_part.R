@@ -1,6 +1,6 @@
 ### Bokai Zhu
 ### 0823-2021
-##### script related to the production of Figure S3.2 pre and post Mario analysis
+##### script related to the production of Figure S2.2 pre and post Mario analysis
 ##### (integrative analysis on wcct human h1n1 -> Xspecies human rhesus cyno IL4 sitmulated data)
 
 
