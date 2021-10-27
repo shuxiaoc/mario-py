@@ -1,6 +1,6 @@
 ### Bokai Zhu
 ### 0824-2021
-##### script related to the production of Figure 4 and FigureS4.1 pre and post Mario analysis
+##### script related to the production of Figure 4 and FigureS3.1 pre and post Mario analysis
 ##### (integrative analysis on codex1 murine cell paper data + citeseq murine spleen from totalvi paper)
 
 #################################### part 1 #######################################
