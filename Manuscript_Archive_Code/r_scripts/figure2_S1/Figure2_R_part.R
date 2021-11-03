@@ -283,3 +283,53 @@ p = ggplot(data = plotTable, mapping = aes(x = Cite.Seq, y = Cytof, fill = goodb
   xlim(rev(levels(table$Cite.Seq))) + theme(text = element_text(size=20))
 # and the balanced accuracy was calculated by package caret, extracted from the cm object
 
+
+
+###### heatmap production in the main figure:
+colnames(inte_proCYTOF) <- paste("CYTOF", colnames(inte_proCYTOF), sep = "_")
+colnames(inte_proCITE) <- paste("CITE", colnames(inte_proCITE), sep = "_")
+
+column_sequ=c("CYTOF_CD3","CITE_CD3","CYTOF_CD4","CITE_CD4","CYTOF_CD8","CITE_CD8a","CYTOF_CD19","CITE_CD19",
+              "CYTOF_HLA.DR","CITE_HLA.DR","CYTOF_CD14","CITE_CD14","CYTOF_CD16","CITE_CD16","CYTOF_CD45RA",
+              "CITE_CD45RA","CYTOF_CD11c","CITE_CD11c","CYTOF_CD123","CITE_CD123","CYTOF_CD34","CITE_CD38","CYTOF_CD133",
+              "CYTOF_CD22","CYTOF_CD11b","CYTOF_Flt3","CYTOF_CD20","CYTOF_CXCR4","CYTOF_CD235ab","CYTOF_CD45","CYTOF_CD321",
+              "CYTOF_CD33","CYTOF_CD47","CYTOF_CD7","CYTOF_CD15","CYTOF_CD44","CYTOF_CD13","CYTOF_CD61","CYTOF_CD117","CYTOF_CD49d",
+              "CYTOF_CD64","CYTOF_CD41","CITE_CD11a","CITE_CD127-IL7Ra","CITE_CD161","CITE_CD197-CCR7","CITE_CD25","CITE_CD27",
+              "CITE_CD278-ICOS","CITE_CD28","CITE_CD45RO","CITE_CD56","CITE_CD57","CITE_CD69","CITE_CD79b")
+
+proCITE_CYTOF=cbind(inte_proCYTOF,inte_proCITE)
+proCITE_CYTOF=proCITE_CYTOF[,column_sequ]
+
+cell_type_label = anno.term
+mat_markers = proCITE_CYTOF
+mat_cor = cor(mat_markers,method="pearson")
+colors = c(seq(0,1,length=22))
+my_palette <- rev(colorRampPalette(brewer.pal(6,"RdBu"))(n = 21))
+cell_types = unique(cell_type_label)
+cell_type_mat = matrix(0,nrow=length(cell_types),ncol=ncol(mat_markers))
+for (idx in c(1:length(cell_types))){
+  #print(idx)
+  row_match = cell_type_label %in% cell_types[idx]
+  #print(length(which(row_match)))
+  cell_type_mat[idx,] = colMeans(mat_markers[row_match,])
+}
+# Heat map of 0-1 values
+colors = c(seq(0,1,length=22))
+my_palette <- rev(colorRampPalette(brewer.pal(6,"RdBu"))(n = 21))
+my_palette <- colorRampPalette(brewer.pal(6,"PuRd"))(n = 21)
+
+colors = c(seq(-3,3,length=100))
+my_palette <- coolwarm(99)
+  # Save as SVG
+svglite(file = "/home/bkzhu/SNE-multi/figure_rcode/fig3/tsne_figs/heatmapt_proCYT_CIT_term.svg",
+    width = 10,
+    height = 10
+      # system_fonts = list(sans = "Arial Unicode MS")
+      # dpi = 300
+    )
+par(mar = c(0, 0, 0, 0))
+hm2_call = heatmap.2(cell_type_mat,col=my_palette,breaks=colors,density.info="none",trace="none",Rowv=F,Colv=F,dendrogram="none",symm=F,labRow=cell_types,labCol=colnames(mat_markers),margins=c(3*(dim(cell_type_mat)[2]/dim(cell_type_mat)[1]),5),scale="col",cexRow=1,cexCol=0.7,rowsep=c(0:20),colsep=c(0:33),sepcolor="black",sepwidth=c(0.0001,0.0001), key=FALSE)
+dev.off()
+
+### heatmap production eneded
+
