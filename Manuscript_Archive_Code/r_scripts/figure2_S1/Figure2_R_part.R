@@ -1,7 +1,7 @@
 ### Bokai Zhu
 ### 2021-0821
 ### script related to the production parts of Figure 2 (tsne plots and featureplots)
-### and production of FigureS2.1 
+### and production of FigureS1.1 
 
 ##################### part 1 ########################
 
