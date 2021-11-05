@@ -35,7 +35,14 @@ git clone https://github.com/shuxiaoc/mario-py.git
 cd mario-py/
 python setup.py install --user
 ```
-### Troubleshooting
+
+## How to use
+
+### Quick example:
+
+To use in ```MARIO``` in ```python``` :
+
+## Troubleshooting
 
 * q1
 * q2
