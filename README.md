@@ -10,7 +10,7 @@ This github repo includes `mario-py` and `mario-R`, which is a Python package fo
 
 An in-depth paragraph about your project and overview of use.
 
-## Getting Started
+## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/green.png" width="25" height="25"> Getting Started
 
 ### Dependencies
 
@@ -36,13 +36,13 @@ cd mario-py/
 python setup.py install --user
 ```
 
-## How to use
+## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/blue.png" width="25" height="25"> How to use
 
 ### Quick example:
 
 To use in ```MARIO``` in ```python``` :
 
-## Troubleshooting
+## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/yellow.png" width="25" height="25"> Troubleshooting
 
 * q1
 * q2
