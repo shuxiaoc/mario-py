@@ -592,7 +592,7 @@ celltypes_summaryH <- H %>%
   select(-cell_count, -bin_area) %>%
   # Get statistics for each celltype and bin
   group_by(anchor_cell_type, bin , celltype) %>%
-  summarize(avg = mean(cell_density, na.rm = TRUE),
+  dplyr::summarize(avg = mean(cell_density, na.rm = TRUE),
             std_dev = sd(cell_density, na.rm = TRUE),
             count = n()) %>%
   ungroup() %>%
@@ -615,7 +615,7 @@ celltypes_summaryL <- L %>%
   select(-cell_count, -bin_area) %>%
   # Get statistics for each celltype and bin
   group_by(anchor_cell_type, bin , celltype) %>%
-  summarize(avg = mean(cell_density, na.rm = TRUE),
+  dplyr::summarize(avg = mean(cell_density, na.rm = TRUE),
             std_dev = sd(cell_density, na.rm = TRUE),
             count = n()) %>%
   ungroup() %>%
