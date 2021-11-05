@@ -41,6 +41,17 @@ python setup.py install --user
 ### Quick example:
 
 To use in ```MARIO``` in ```python``` :
+```
+one line pipeline with default
+```
+
+To use in ```MARIO``` in ```R``` (with package ```reticulate```) :
+```
+library(reticulate)
+one line pipeline with default
+```
+
+
 
 ## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/yellow.png" width="25" height="25"> Troubleshooting
 
