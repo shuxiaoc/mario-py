@@ -6,7 +6,7 @@ This github repo includes `mario-py` and `mario-R`, which is a Python package fo
 <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/giphy_mario.gif" width="100" height="100">
 
 
-## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/red.png" width="20" height="20"> Description
+## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/red.png" width="25" height="25"> Description
 
 An in-depth paragraph about your project and overview of use.
 
