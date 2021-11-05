@@ -51,6 +51,9 @@ library(reticulate)
 one line pipeline with default
 ```
 
+### Full tutorial:
+For step by step tutorials on how to use ```MARIO```, with fine-tuned parameters for optimal results and full functionality, please refer to the documents we provided here:
+
 
 
 ## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/yellow.png" width="25" height="25"> Troubleshooting
