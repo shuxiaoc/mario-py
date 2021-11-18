@@ -294,9 +294,9 @@ p + ylab("perc neutrophils of all cells in core") + ggtitle("All Patient neutrop
 
 ## per patient correlation of neutrophil infiltrate and c1q percentage
                      
-neu_patient = neutro_perc12 %>% group_by(patient) %>%
+neu_patient = neutro_perc %>% group_by(patient) %>%
   dplyr::summarise(n = mean(neu_perc))
-c1q_patient = perc_cores_patient12 %>% group_by(patient) %>%
+c1q_patient = perc_cores_patient %>% group_by(patient) %>%
   dplyr::summarise(n = mean(perc)) 
 cor_patient = left_join(c1q_patient, neu_patient, by = "patient")
 cor.test(cor_patient$n.y, cor_patient$n.x, method=c("spearman"))
@@ -309,7 +309,7 @@ p = ggplot(comp_neutro, aes(x = log(neu_perc), y = log(perc))) +
   geom_point(aes(color = patient.x))
 
 ## correlation per core test                     
-cor.test(comp_neutro12$neu_perc, comp_neutro12$perc, method=c("spearman"))
+cor.test(comp_neutro$neu_perc, comp_neutro$perc, method=c("spearman"))
 #
 
 ## production of pseudo plot with c1q high and low macrophage positions:
