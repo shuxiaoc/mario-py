@@ -1,14 +1,12 @@
 # MARIO: single-cell proteomic data matching and integration pipeline
 
-This github repo includes `mario-py` and `mario-R`, which is a Python package for matching and integrating multi-modal single cell data with partially overlapping features.
-
-
 <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/giphy_mario.gif" width="100" height="100">
 
 
 ## [<img src="https://github.com/shuxiaoc/mario-py/blob/main/media/red.png" width="25" height="25">](https://www.youtube.com/watch?v=2iNKPkTOr5k&ab_channel=13irth) Description
 
-An in-depth paragraph about your project and overview of use.
+This github repo includes `mario-py` and `mario-R`, which is a Python package for matching and integrating multi-modal single cell data with partially overlapping features. The method is specifically tailored toward proteomic datasets, and for detailed description on the algorithm, including the core methodology, mathmetical ingredients, application on various biological samples, and extensive benchmarking, please refer to the [paper]()
+
 
 ## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/green.png" width="25" height="25"> Getting Started
 
