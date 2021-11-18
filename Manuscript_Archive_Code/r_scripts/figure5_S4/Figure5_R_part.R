@@ -1,6 +1,6 @@
 ### Bokai Zhu
 ### 2021-0902
-### script related to the production parts of Figure 5 
+### script related to the production parts of Figure 5 and Figure Sup 4.1-4.2 
 ### COVID lung CODEX imaging and COVID BALF CITE-seq data
 
 
@@ -292,6 +292,15 @@ p <- ggplot(neutro_perc, aes(x=patient, y=neu_perc)) +
   geom_boxplot(outlier.shape = NA, lwd = 0.8) + theme_classic()
 p + ylab("perc neutrophils of all cells in core") + ggtitle("All Patient neutrophil infiltration use complement rank")
 
+## per patient correlation of neutrophil infiltrate and c1q percentage
+                     
+neu_patient = neutro_perc12 %>% group_by(patient) %>%
+  dplyr::summarise(n = mean(neu_perc))
+c1q_patient = perc_cores_patient12 %>% group_by(patient) %>%
+  dplyr::summarise(n = mean(perc)) 
+cor_patient = left_join(c1q_patient, neu_patient, by = "patient")
+cor.test(cor_patient$n.y, cor_patient$n.x, method=c("spearman"))
+                     
 ## directly compare per core neutrophil percentage vs c1q high macrophage percentage
 comp_neutro = left_join (neutro_perc, perc_cores_patient, by = c("tma", "region"))
 p = ggplot(comp_neutro, aes(x = log(neu_perc), y = log(perc))) +
@@ -299,6 +308,9 @@ p = ggplot(comp_neutro, aes(x = log(neu_perc), y = log(perc))) +
   geom_smooth(method='lm', formula= y~x) + xlab("neutrophil percent") + ylab("complement macro percent") +
   geom_point(aes(color = patient.x))
 
+## correlation per core test                     
+cor.test(comp_neutro12$neu_perc, comp_neutro12$perc, method=c("spearman"))
+#
 
 ## production of pseudo plot with c1q high and low macrophage positions:
 # need codex all cells with c1q clustering info
@@ -812,7 +824,7 @@ de.rna_full_more = FindMarkers(mph_obj, ident.1 = "1", ident.2 = "2", min.cells.
                                min.pct = 0,
                                logfc.threshold = 0,
                                only.pos = FALSE)
-##### then we based on the DE genes, hand pick some interesting genes
+##### then we based on the DE genes, top ones
 comp12_temp_simp_values =  (cite_regall_rna_only[,c("C1QA","C1QB","C1QC","CXCL8", "CCL2", "IL1B",
                                       "S100A12", "S100A8", "CCL3", "CCL4", "SPP1",
                                       "NAMPT", "CCL7","F13A1", "PLTP", "FOLR2",
@@ -898,30 +910,50 @@ p2 = ggplot(data = c1qL_go[c(1:30,], aes(x = upload_1..fold.Enrichment., y = GO.
 
 ####### ISG analysis ######
 
-
-### list of ~ 50 isg related to covid response is retrieved from cell journal
-# 'The interferon landscape along the respiratory tract impacts the severity of COVID-19'
-polar_genes = c("MAX","ST3GAL4","GSDMD","NAPA", "STAT1", "SPATS2L",
-                "B4GALT5", "ELF1", "RAB27A", "IFIT1", "IFIT5",
-                "IFIT3", "DDX60","STAT2", "BST2",
-                "UBD", "SUSD3", "REC8", "ETV6","CNP","USP18",
-                "ARNTL","CLEC4D","GBP3","NRN1","TAGAP","PIK3AP1",
-                "MYD88","ISG15","MLKL","RSAD2","CCND3","SPATA13",
-                "ISG20","ZBP1","IFITM3","RGS22","FGD2","FZD5","CASP7",
-                "APOL4","ERLIN1","MSR1","HSPA8","LY6E",
-                "GNB4","TRIM21","RAB39A",
-                "ANGPTL4","FNDC4","DNAJC6","APOL2","IL11","IL4I1")
-temp12 = cite_regall_rna_only[,polar_genes]
-temp12 = scale(temp12) # znorm before plotting
-cell_type_label = comp_clust # add grouping information
-cell_type_matdf = as.data.frame(cell_type_mat)
-heatmap(as.matrix(cell_type_matdf))
-## make heatmap plot
-colors = c(seq(-0.3,0.3,length=16))
-my_palette <- rev(colorRampPalette(brewer.pal(6,"YlOrRd"))(n = 15))
-hm2_call = heatmap.2(cell_type_mat,col=my_palette,breaks=colors,density.info="none",
-                     trace="none",Rowv=F,Colv=T,dendrogram="col",symm=F,labRow=cell_types,
-                     labCol=colnames(mat_markers),margins=c(0.5*(dim(cell_type_mat)[2]/dim(cell_type_mat)[1]),2),
-                     scale="none",cexRow=1,cexCol=1,rowsep=c(0:20),colsep=c(0:33),sepcolor=NA,sepwidth=c(0.0001,0.0001))
-                           
-                           
+## interferon list with cluster info extracted from "Parsing the Interferon Transcriptional Network and Its Disease Associations" sup materials
+full628list = read.csv("/home/bkzhu/SNE-multi/figure_rcode/covid/covid-628-ISG.csv")
+genes = as.character(full628list$Target)
+temp = cite_rna_only[,colnames(cite_rna_only) %in% genes] # get the interferon lists
+rownames(temp) = as.character(rownames(temp))
+cell_type_label = comp_clust # the high low cluster
+mph_obj=CreateSeuratObject(counts=t(temp),assay="RNA") # seurat object with only isgs in matched macrophage
+SetAssayData(object = mph_obj, slot = "data", new.data = t(temp), assay="RNA")
+Idents(mph_obj) = as.character(comp_clust)
+###### compute logFC for all genes in 628 list
+de.rna_full_628 = FindMarkers(mph_obj, ident.1 = "1", ident.2 = "2", min.cells.group = 1, 
+                        min.cells.feature = 1,
+                        min.pct = 0,
+                        logfc.threshold = 0,
+                        only.pos = FALSE)
+# filter the DE ISGs
+de.rna_full_628_sig = subset(de.rna_full_628, de.rna_full_628$p_val_adj<0.05)
+de.rna_full_628_sig_logFC = subset(de.rna_full_628_sig, de.rna_full_628_sig$avg_logFC> 0.1 | de.rna_full_628_sig$avg_logFC < -0.1 )
+# some uggly code that i should clean up but it is what it is
+rownames(full628list) = as.character(full628list$Target)
+sigcluster = full628list[rownames(de.rna_full_628_sig_logFC),]
+sigcluster$Target <- NULL
+colnames(sigcluster) = "cluster"
+sigcluster %>% arrange(cluster) -> sigcluster_order
+rownames(sigcluster_order) = rownames(sigcluster)[order(sigcluster$cluster)]
+sigcluster_order$cluster = as.factor(sigcluster_order$cluster) 
+# make matrix for heatmap plotting
+df = temp[,rownames(de.rna_full_628_sig_logFC)]
+mat_markers = sapply(df, function(df) (df-mean(df))/sd(df))
+cell_types = unique(comp_clust)
+cell_type_mat = matrix(0,nrow=length(cell_types),ncol=ncol(df))
+for (idx in c(1:length(cell_types))){
+  #print(idx)
+  row_match = cell_type_label %in% cell_types[idx]
+  #print(length(which(row_match)))
+  cell_type_mat[idx,] = colMeans(mat_markers[row_match,])
+}
+###
+plot_df = t(cell_type_mat)
+rownames(plot_df) = rownames(de.rna_full_628_sig_logFC)
+colnames(plot_df) = c(1,2)
+## plot with pigengene
+library(Pigengene)
+pdf(file="/home/bkzhu/SNE-multi/figure_rcode/covid/figures/ISG_clusters_ginlong.pdf",height = 30, width = 20)
+pheatmap.type(plot_df, sigcluster_order, type = colnames(sigcluster_order)[1],
+doTranspose=FALSE, conditions="Auto")
+dev.off()
