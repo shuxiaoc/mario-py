@@ -957,3 +957,498 @@ pdf(file="/home/bkzhu/SNE-multi/figure_rcode/covid/figures/ISG_clusters_ginlong.
 pheatmap.type(plot_df, sigcluster_order, type = colnames(sigcluster_order)[1],
 doTranspose=FALSE, conditions="Auto")
 dev.off()
+                     
+                     
+                     
+##################### part 3 #######################                     
+                     
+  
+                     
+## panini analysis
+## notice the threshold manual determation was done in python, deposited in the python folder on github
+## script also does not include segmentation and signal extraction, as just standard pipeline code
+
+library(flowCore)
+library(matrixStats)
+library(ggplot2)
+library(reshape2)
+library(dplyr)
+library(ggrepel)
+library(tidyverse)
+
+### read files of fcs ( single cell segemented with signal extracted)
+fcs1=read.flowSet("/home/bkzhu/SNE-multi/figure_rcode/covid/ish/exp_2021_sep/tma3_FCS_output/tma3_all/dataScaleSizeFCS_all.fcs")
+expr1 = as.data.frame(fsApply(fcs1, exprs))
+colnames(expr1) = c("cellIDinFOV","cellSize","dapi","cd15","c1qa","cd68","reg","x","y")
+expr1$tma = 3
+fcs2=read.flowSet("/home/bkzhu/SNE-multi/figure_rcode/covid/ish/exp_2021_sep/tma4_FCS_output/tma4_all/dataScaleSizeFCS_all.fcs")
+expr2 = as.data.frame(fsApply(fcs2, exprs))
+colnames(expr2) = c("cellIDinFOV","cellSize","dapi","cd15","c1qa","cd68","reg","x","y")
+expr2$tma = 4
+expr12 = rbind(expr1, expr2)
+
+## remove cells based on dapi and size
+# remove cells with low dapi density
+quantile(expr12$dapi, 0.01) # 3328
+expr1 = subset(expr1,expr1$dapi > 3328) 
+# remove cells too large, aggregation or out-of-focus chunks
+mean(expr12$cellSize) #263
+expr12 = subset(expr12,expr12$cellSize <= 500) 
+# remove cells too small, debris and rbc potentially
+quantile(expr12$cellSize, 0.05) # 52
+expr12 = subset(expr12,expr12$cellSize >= 45) 
+# column with positive indicator
+expr12$c1qa_h = 0
+expr12$cd68_h = 0
+expr12$cd15_h = 0
+# panini and codex experiment core name different, link them
+tma3_reg = read.csv("/home/bkzhu/SNE-multi/figure_rcode/covid/ish/exp_2021_sep/tma3_region.csv")
+colnames(tma3_reg) = c("reg","yury")
+tma4_reg = read.csv("/home/bkzhu/SNE-multi/figure_rcode/covid/ish/exp_2021_sep/tma4_region.csv")
+colnames(tma4_reg) = c("reg","yury")
+expr12_tma3 = subset(expr12, expr12$tma == 3)
+expr12_tma4 = subset(expr12, expr12$tma == 4)
+expr12_tma3 = left_join(expr12_tma3, tma3_reg, by = c("reg"))
+expr12_tma4 = left_join(expr12_tma4, tma4_reg, by = c("reg"))
+# pick the cores from PANINI that was analysied in origianl codex experiment
+expr12_tma3_mario = subset(expr12_tma3, expr12_tma3$yury %in% c(1,2,4,6,7,8,9,11,12,13,14,17,18,19,20,22,25,27,3,16,21,24,26,28,29))
+expr12_tma4_mario = subset(expr12_tma4, expr12_tma4$yury %in% c(6,7,8,11,12,16,17,19,21,22,24,26,27,29,3,5,10,14,18,23,28))
+expr12_mario = rbind(expr12_tma3_mario,expr12_tma4_mario)
+
+# read in the threshold validated by manual confirmation, refer to the jupter files
+# production process "https://github.com/shuxiaoc/mario-py/blob/main/Manuscript_Archive_Code/py_scripts/Figure5_PANINI-post-imaging-processing.ipynb"
+thresh = read.csv("/home/bkzhu/SNE-multi/figure_rcode/covid/ish/exp_2021_sep/threshold-update.csv")
+expr12_mario = left_join(expr12_mario, thresh, by = c('tma', 'reg'))
+# get cell type indicator
+expr12_mario$cd15_h[expr12_mario$cd15 > expr12_mario$cd15_thresh ] = 1
+expr12_mario$c1qa_h[expr12_mario$c1qa > expr12_mario$c1qa_thresh ] = 1
+expr12_mario$cd68_h[expr12_mario$cd68 > expr12_mario$cd68_thresh ] = 1
+expr12_mario$cd68_c1qa_h = as.integer(expr12_mario$c1qa_h) * as.integer(expr12_mario$cd68_h) + expr12_mario$cd68_h
+## quick test of neutrophil
+expr12_mario$region_unique = paste(expr12_mario$tma, expr12_mario$yury, sep='-') # rename the cores based on original codex experiment
+expr12_mario$cd68_c1qa_h[expr12_mario$cd68_c1qa_h == 0] = NA
+expr12_mario_temp = subset(expr12_mario, !(is.na(expr12_mario$cd68_c1qa_h))) # remove cells not macrophage
+expr12_mario_c1qa_cd68 = expr12_mario_temp %>%  group_by(region_unique, .drop = FALSE) %>%  # count c1qa positive macrophage
+  dplyr::count(cd68_c1qa_h) %>% 
+  dplyr::mutate(countT= sum(n)) %>% 
+  dplyr::mutate(c1qa_cd68_perc= n / countT)
+expr12_mario_c1qa_cd68_2 = subset(expr12_mario_c1qa_cd68, expr12_mario_c1qa_cd68$cd68_c1qa_h == 2) # take the c1qa high percs
+comb2 = left_join(expr12_mario_c1qa_cd68_2, expr12_mario_neu1, by= c("region_unique"))
+# get mario predicted values in the codex experiment
+mario_pred = comp_neutro # from previous sections in this script
+mario_pred$region_unique = paste(mario_pred$tma, mario_pred$region, sep='-')
+colnames(comb)[1] = 'region_unique'
+mario_pred_validate = left_join(comb, mario_pred, by = c("region_unique"))
+
+## the plot on per tissue core mario panini macrophage c1q high percentage correlation:
+p = ggplot(mario_pred_validate2, aes(x = perc, y = c1qa_cd68_perc)) +
+  stat_summary(fun.data=mean_cl_normal) + theme_classic() +
+  geom_smooth(method='lm', formula= y~x) + xlab("predict") + ylab("validate") +
+  geom_point(aes(color = patient.y, stroke = 1))
+# and of course the correlation test
+cor.test(mario_pred_validate2$c1qa_cd68_perc, mario_pred_validate2$perc, method=c("spearman"))
+
+## also we plot the per patient mario panini macropahge c1q high percentage correlation:
+mario_pred_validate2_perPat = mario_pred_validate2 %>% group_by(patient.y) %>%
+  dplyr::summarize(mean_pred = mean(perc), mean_valid = mean(c1qa_cd68_perc))
+mario_pred_validate2_perPat = na.omit(mario_pred_validate2_perPat)
+
+p = ggplot(mario_pred_validate2_perPat, aes(x = mean_pred, y = mean_valid)) +
+  stat_summary(fun.data=mean_cl_normal) + theme_classic() +
+  geom_smooth(method='lm', formula= y~x) + xlab("predict") + ylab("validate") +
+  geom_point()
+cor.test(mario_pred_validate2_perPat$mean_valid, mario_pred_validate2_perPat$mean_pred, method=c("pearson"))
+
+
+## anchor plot related in validation experiment
+################ now anochor plots for PANINI, the MARIO prediction was produced already previously (neutrophil etc)
+
+
+# quick prep dataframe format for the analysis
+############
+expr12_mario$rowid = rownames(expr12_mario)
+expr12_mario$cd68_c1qa_h[expr12_mario$cd68_c1qa_h == 1] = FALSE # high mac is true
+expr12_mario$cd68_c1qa_h[expr12_mario$cd68_c1qa_h == 2] = TRUE # low mac is false
+expr12_mario$cd68_c1qa_h = as.logical(expr12_mario$cd68_c1qa_h)
+expr12_mario$region_unique2 = expr12_mario$tma * 100 + expr12_mario$yury # dummy region number as unique
+## add annotation of cells
+expr12_mario$cell_type = "Other_cells"
+expr12_mario$cell_type[expr12_mario$c1qa_h == 1] = "comp_expressing_other_cells"
+expr12_mario$cell_type[expr12_mario$cd15_h == 1] = "neutrophil"
+expr12_mario$cell_type[expr12_mario$cd68_h == 1] = "macrophage"
+expr12_mario$cell_type = as.factor(expr12_mario$cell_type)
+## one hot set up for the anchor analysis code
+library(mltools)
+expr12_mario_1h <- one_hot(as.data.table(expr12_mario), cols = "cell_type")
+expr12_mario_1h$cell_type = expr12_mario$cell_type
+#write.csv(expr12_mario_1h, "/home/bkzhu/SNE-multi/figure_rcode/covid/ish/expr12_mario.csv") # save out for further usage
+#############
+
+
+############# start anchor analysis, these are parameters
+outputdir = "temp"
+id_col = "rowid"
+x_col = "x"
+y_col = "y"
+celltype_col = "cell_type"
+region_col = "region_unique2"
+split_celltype = FALSE
+keep_anchor = FALSE
+distance_threshold = 264
+um_pixel = 100/distance_threshold
+bins = 6
+num_cores = 10
+
+r_max = distance_threshold * um_pixel
+
+bin_area = 3.14/bins*(r_max)^2
+bin_conversion = data.frame(bin_num = seq(1, bins, 1)) %>%
+  # Get bin radii
+  mutate(bin_radius_min = (bin_num-1)*r_max/bins,
+         bin_radius_max = (bin_num)*r_max/bins) %>%
+  # Calculate area of each bin
+  mutate(bin_area = 3.14*(bin_radius_max^2 - bin_radius_min^2))
+
+######## running code
+
+df_master_clean <- read_csv("/home/bkzhu/SNE-multi/figure_rcode/covid/ish/expr12_mario.csv") # read in as tidy format
+anchor_col = "cd68_c1qa_h"
+df_input <- df_master_clean
+df_input = subset(df_input,!(df_input$cd68_c1qa_h == FALSE & df_input$cd68_h == 1)) # get rid of low and NA macrophage
+columns_to_use = c("cell_type_comp_expressing_other_cells", "cell_type_macrophage",
+                   "cell_type_neutrophil", "cell_type_Other_cells" ) # using cell type columns
+colnames(df_input[,columns_to_use])
+H = get_distance_matrix(df_input = df_input,
+                        id_col = id_col, x_col = x_col, y_col = y_col, celltype_col = celltype_col, 
+                        columns_to_use = columns_to_use,
+                        anchor_col = anchor_col, region_col = region_col, split_celltype = split_celltype,
+                        keep_anchor = keep_anchor, distance_threshold = distance_threshold, bins = bins, 
+                        num_cores = num_cores,
+                        um_pixel = um_pixel)
+# scale values by cell numbers
+cell_columns = colnames(H)[6:9] # use the cell type columns
+all_target_columns = colnames(H)[6:9]
+cell_counts = rowSums(H[,cell_columns])
+H[,all_target_columns] = H[,all_target_columns] / cell_counts
+######
+df_master_clean <- read_csv("/home/bkzhu/SNE-multi/figure_rcode/covid/ish/expr12_mario.csv")
+df_master_clean[,anchor_col]=!df_master_clean[,anchor_col] # reverse the c1q group
+df_master_clean[,anchor_col][is.na(df_master_clean[,anchor_col])] <- FALSE
+df_input <- df_master_clean
+df_input = subset(df_input,!(df_input$cd68_c1qa_h == FALSE & df_input$cd68_h == 1)) # get rid of high and NA macrophage
+columns_to_use = c("cell_type_comp_expressing_other_cells", "cell_type_macrophage",
+                   "cell_type_neutrophil", "cell_type_Other_cells" ) # using cell type columns
+colnames(df_input[,columns_to_use])
+L = get_distance_matrix(df_input = df_input,
+                        id_col = id_col, x_col = x_col, y_col = y_col, celltype_col = celltype_col, 
+                        columns_to_use = columns_to_use,
+                        anchor_col = anchor_col, region_col = region_col, split_celltype = split_celltype,
+                        keep_anchor = keep_anchor, distance_threshold = distance_threshold, bins = bins, 
+                        num_cores = num_cores,
+                        um_pixel = um_pixel)
+cell_counts = rowSums(L[,columns_to_use])
+L[,all_target_columns] = L[,all_target_columns] / cell_counts
+# Get celltype column names
+celltype_columns = c("cell_type_comp_expressing_other_cells", "cell_type_macrophage",
+                     "cell_type_neutrophil", "cell_type_Other_cells" )
+celltype_columns = colnames(df_input[,celltype_columns])
+celltypes_summaryH <- H %>%
+  # select only the celltype columns
+  select(anchor_cell_id, anchor_cell_type, bin, region_unique2, metric, all_of(celltype_columns)) %>%
+  # Get the distribution counts of each celltype in a bin
+  dplyr::filter(metric == "sum_expr") %>%
+  gather(key = "celltype", value = "cell_count", celltype_columns) %>%
+  # Append bin data
+  left_join(bin_conversion %>%
+              select(bin_num, bin_area), by = c("bin" = "bin_num")) %>%
+  mutate(cell_density = cell_count/1) %>% # 1 was binarea for cell density version, changed 0617
+  select(-cell_count, -bin_area) %>%
+  # Get statistics for each celltype and bin
+  group_by(anchor_cell_type, bin , celltype) %>%
+  summarize(avg = mean(cell_density, na.rm = TRUE),
+            std_dev = sd(cell_density, na.rm = TRUE),
+            count = n()) %>%
+  ungroup() %>%
+  # Calculate standard error and confidence intervals
+  mutate(se = std_dev/sqrt(count),
+         lower_ci = avg - qt(1 - ((1 - 0.95)/2), count - 1) * se,
+         upper_ci = avg + qt(1 - ((1 - 0.95)/2), count - 1) * se) %>%
+  ungroup()
+
+celltypes_summaryL <- L %>%
+  # select only the celltype columns
+  select(anchor_cell_id, anchor_cell_type, bin, region_unique2, metric, all_of(celltype_columns)) %>%
+  # Get the distribution counts of each celltype in a bin
+  dplyr::filter(metric == "sum_expr") %>%
+  gather(key = "celltype", value = "cell_count", celltype_columns) %>%
+  # Append bin data
+  left_join(bin_conversion %>%
+              select(bin_num, bin_area), by = c("bin" = "bin_num")) %>%
+  mutate(cell_density = cell_count/1) %>% # 1 was binarea for cell density version, changed 0617
+  select(-cell_count, -bin_area) %>%
+  # Get statistics for each celltype and bin
+  group_by(anchor_cell_type, bin , celltype) %>%
+  summarize(avg = mean(cell_density, na.rm = TRUE),
+            std_dev = sd(cell_density, na.rm = TRUE),
+            count = n()) %>%
+  ungroup() %>%
+  # Calculate standard error and confidence intervals
+  mutate(se = std_dev/sqrt(count),
+         lower_ci = avg - qt(1 - ((1 - 0.95)/2), count - 1) * se,
+         upper_ci = avg + qt(1 - ((1 - 0.95)/2), count - 1) * se) %>%
+  ungroup()
+
+#######
+celltypes_summaryH$group=anchor_col
+celltypes_summaryL$group=paste0("No_",anchor_col)
+HL_sum=rbind(celltypes_summaryH,celltypes_summaryL)
+###### ploting the panini validation neutrophil density
+HL_sum_sub = subset(HL_sum,HL_sum$celltype == "cell_type_neutrophil")
+
+p = ggplot(data = HL_sum_sub,
+           mapping = aes(x = factor(bin), color = group, group = group)) +
+  geom_line(mapping = aes(y = avg), lwd = 0.15) +
+  geom_ribbon(mapping = aes( y = avg, ymin = lower_ci, ymax = upper_ci, fill = group),
+              alpha = 0.2, linetype = "blank", lwd = 0.15) +
+  theme_bw() + ggtitle("complement subcluster macrophages to neutrophils") + scale_color_manual(values=c("#741AAC", "#76B947")) +
+  scale_fill_manual(values=c("#741AAC", "#76B947"))
+
+
+
+
+############################### below start the spatial correlation analysis between panini validation and original codex experiment
+
+
+
+### this part is to retrieve the orignal codex data with mario matched c1qabc information
+
+# cbind codex feature with matched c1qabc levels as in previous
+codex_c1qa = cbind(codex, complement_data) # "codex" and "complement_data" were read / produced in the previous section in this script
+coluse = c("x","y","z","x_tile","y_tile","tma","C1QA","region", "cluster.term")# used columns
+codex12_coluse = codex_c1qa[,coluse]
+codex12_coluse$x = round(codex12_coluse$x / 2)
+codex12_coluse$y = round(codex12_coluse$y / 2)
+### all cells from codex
+df_master_clean <- read_csv("/home/bkzhu/SNE-multi/figure_rcode/covid/codextma2_indicator_clean_han_1h-macrophageTMA1234_clust12.csv")
+coluse = c("x","y","tma","region","cluster.term.x")
+codexall_coluse = df_master_clean[,coluse]
+codexall_coluse$x = round(codexall_coluse$x / 2)
+codexall_coluse$y = round(codexall_coluse$y / 2)
+## ploting, tissue core 4-17, mario prediction level
+temp2  = subset(codex12_coluse, codex12_coluse$tma ==4 & codex12_coluse$region == 17 & codex12_coluse$cluster.term == "Macrophage")
+temp  = subset(codexall_coluse, codexall_coluse$tma ==4 & codexall_coluse$region == 17 )
+p = ggplot() +
+  geom_point(data = temp, aes(x, y) ,colour = "dodgerblue4", size =2, alpha = 1, stroke = 0)+
+  #scale_color_manual(values = c('darkblue' = 'blue')) +
+  geom_point(data = temp2, aes(x, y, colour = C1QA), size =5, alpha = 0.8, stroke = 0) +
+  theme_classic() + scale_colour_gradient(low = "white", high = "red")
+
+### for actual spatial correlation analysis between experiment, we need to make sure the 
+### fov rotation and region is same
+
+#### rotate/ trim the core to the right setting for codex experiment
+temp  = subset(codexall_coluse, codexall_coluse$tma ==4 & codexall_coluse$region == 17 )
+# flip
+y_mid = (max(temp$y) - min(temp$y))/2
+x_mid = (max(temp$x) - min(temp$x))/2
+temp$x_new = temp$x - x_mid
+temp$y_new = temp$y - y_mid
+temp$x_new = -temp$x_new
+# approx dot to origin
+round_y = max(temp$y_new) - ((max(temp$y_new) - min(temp$y_new) ) / 2)
+round_x = max(temp$x_new) - ((max(temp$x_new) - min(temp$x_new) ) / 2 )
+temp$x_new = temp$x_new - round_x
+temp$y_new = temp$y_new - round_y
+# rotate
+theta = (90 * 3.14) / 180
+temp$x_new2 = cos(theta) * temp$x_new - sin(theta) * temp$y_new 
+temp$y_new2 = sin(theta) * temp$x_new + cos(theta) * temp$y_new 
+# trim FOV range
+temp = subset(temp, temp$y_new2< 1200 & temp$y_new2> -1200 & temp$x_new2> -1900 & temp$x_new2< 1000)
+dapi_yury = temp # original codex experiment information
+
+
+#### rotate/ trim the core to the right setting for panini experiment
+# file with the validation information
+temp  = subset(expr12_mario, expr12_mario$region_unique == "4-17" )
+# flip
+y_mid = (max(temp$y) - min(temp$y))/2
+x_mid = (max(temp$x) - min(temp$x))/2
+temp$x_new = temp$x - x_mid
+temp$y_new = temp$y - y_mid
+temp$y_new = -temp$y_new
+## trim the FOV range
+temp = subset(temp, temp$y_new< 1400 & temp$y_new> -1500 & temp$x_new> -1900 & temp$x_new< 1000)
+dapi_bk = temp # panini experiment information
+
+
+####### now we devide the core into 10 x 10 regions (total 100 in the single core)
+
+
+##### codex
+# get region id
+step = 10
+length_x = floor((max(dapi_yury$x_new2) - min(dapi_yury$x_new2)) / step)
+length_y = floor((max(dapi_yury$y_new2) - min(dapi_yury$y_new2)) / step)
+# x_id steps
+dapi_yury = dapi_yury %>% arrange(x_new2)
+dapi_yury$x_id = NA
+for (i in c(1:step)){
+  range1 = (i-1)*length_x + min(dapi_yury$x_new2)
+  range2 = (i)*length_x + min(dapi_yury$x_new2)
+  dapi_yury$x_id[dapi_yury$x_new2 >= range1 & dapi_yury$x_new2 <= range2] = i
+}
+# y_id steps
+dapi_yury = dapi_yury %>% arrange(y_new2)
+dapi_yury$y_id = NA
+for (i in c(1:step)){
+  range1 = (i-1)*length_y + min(dapi_yury$y_new2)
+  range2 = (i)*length_y + min(dapi_yury$y_new2)
+  dapi_yury$y_id[dapi_yury$y_new2 >= range1 & dapi_yury$y_new2 <= range2] = i
+}
+dapi_yury$xyid = paste(dapi_yury$x_id, dapi_yury$y_id, sep='-')
+##### 
+
+
+##### panini
+# get region id
+step = 10
+length_x = floor((max(dapi_bk$x_new) - min(dapi_bk$x_new)) / step)
+length_y = floor((max(dapi_bk$y_new) - min(dapi_bk$y_new)) / step)
+# x_id steps
+dapi_bk = dapi_bk %>% arrange(x_new)
+dapi_bk$x_id = NA
+for (i in c(1:step)){
+  range1 = (i-1)*length_x + min(dapi_bk$x_new)
+  range2 = (i)*length_x + min(dapi_bk$x_new)
+  dapi_bk$x_id[dapi_bk$x_new >= range1 & dapi_bk$x_new <= range2] = i
+}
+# y_id steps
+dapi_bk = dapi_bk %>% arrange(y_new)
+dapi_bk$y_id = NA
+for (i in c(1:step)){
+  range1 = (i-1)*length_y + min(dapi_bk$y_new)
+  range2 = (i)*length_y + min(dapi_bk$y_new)
+  dapi_bk$y_id[dapi_bk$y_new >= range1 & dapi_bk$y_new <= range2] = i
+}
+dapi_bk$xyid = paste(dapi_bk$x_id, dapi_bk$y_id, sep='-')
+##### 
+
+# prep for plotting base line correlation ( cell density for each region across experiment and validation)
+# sum cell number in each individual region
+dpp1 = dapi_yury %>% group_by(xyid) %>%  summarise(n = n()) # codex
+dpp2 = dapi_bk %>% group_by(xyid) %>%  summarise(n = n()) # panini
+dpp12 = left_join(dpp1, dpp2, by = "xyid") # join for plotting
+## dot plot for base line spatial correlation
+p = ggplot(dpp12, aes(x = sqrt(n.x), y = sqrt(n.y))) +
+  theme_classic() +
+  geom_smooth(method='lm', formula= y~x) +
+  xlab("predict") + ylab("validate") +
+  geom_point(aes(stroke = 1))
+cor.test(dpp12$n.x, dpp12$n.y, method=c("spearman")) # correlation test 
+
+
+
+############# now we repeat the upper code but for c1qa signal in macrophages
+
+### codex with mario predic
+temp2  = subset(codex12_coluse, codex12_coluse$tma ==4 &
+                  codex12_coluse$region == 17 &
+                  codex12_coluse$cluster.term == "Macrophage") # only care c1qa signal from macrophages
+# flip
+y_mid = (max(temp$y) - min(temp$y))/2
+x_mid = (max(temp$x) - min(temp$x))/2
+temp2$x_new = temp2$x - x_mid
+temp2$y_new = temp2$y - y_mid
+temp2$x_new = -temp2$x_new
+# round point
+temp2$x_new = temp2$x_new - round_x
+temp2$y_new = temp2$y_new - round_y
+# rotate
+theta = (90 * 3.14) / 180
+temp2$x_new2 = cos(theta) * temp2$x_new - sin(theta) * temp2$y_new 
+temp2$y_new2 = sin(theta) * temp2$x_new + cos(theta) * temp2$y_new 
+# trim
+temp2 = subset(temp2, temp2$y_new2< 1200 & temp2$y_new2> -1200 & temp2$x_new2> -1900 & temp2$x_new2< 1000)
+dapi_yury_c1q = temp2
+
+
+### panini validation
+temp2  = subset(expr12_mario, expr12_mario$region_unique == "4-17" & expr12_mario$cd68_h == 1) # only care c1qa signal from macrophages
+# flip
+y_mid = (max(temp$y) - min(temp$y))/2
+x_mid = (max(temp$x) - min(temp$x))/2
+temp2$x_new = temp2$x - x_mid
+temp2$y_new = temp2$y - y_mid
+temp2$y_new = -temp2$y_new
+## trim
+temp2 = subset(temp2, temp2$y_new< 1400 & temp2$y_new> -1500 & temp2$x_new> -1900 & temp2$x_new< 1000)
+dapi_bk_c1q = temp2
+
+
+#### label the regions as before, okay i know this is stupid and should not be repeated but fine
+
+### codex
+# get region id
+step = 10
+length_x = floor((max(dapi_yury_c1q$x_new2) - min(dapi_yury_c1q$x_new2)) / step)
+length_y = floor((max(dapi_yury_c1q$y_new2) - min(dapi_yury_c1q$y_new2)) / step)
+# x_id steps
+dapi_yury_c1q = dapi_yury_c1q %>% arrange(x_new2)
+dapi_yury_c1q$x_id = NA
+for (i in c(1:step)){
+  range1 = (i-1)*length_x + min(dapi_yury_c1q$x_new2)
+  range2 = (i)*length_x + min(dapi_yury_c1q$x_new2)
+  dapi_yury_c1q$x_id[dapi_yury_c1q$x_new2 >= range1 & dapi_yury_c1q$x_new2 <= range2] = i
+}
+# y_id steps
+dapi_yury_c1q = dapi_yury_c1q %>% arrange(y_new2)
+dapi_yury_c1q$y_id = NA
+for (i in c(1:step)){
+  range1 = (i-1)*length_y + min(dapi_yury_c1q$y_new2)
+  range2 = (i)*length_y + min(dapi_yury_c1q$y_new2)
+  dapi_yury_c1q$y_id[dapi_yury_c1q$y_new2 >= range1 & dapi_yury_c1q$y_new2 <= range2] = i
+}
+dapi_yury_c1q$xyid = paste(dapi_yury_c1q$x_id, dapi_yury_c1q$y_id, sep='-')
+
+#### panini
+# get region id
+length_x = floor((max(dapi_bk_c1q$x_new) - min(dapi_bk_c1q$x_new)) / step)
+length_y = floor((max(dapi_bk_c1q$y_new) - min(dapi_bk_c1q$y_new)) / step)
+# x_id steps
+dapi_bk_c1q = dapi_bk_c1q %>% arrange(x_new)
+dapi_bk_c1q$x_id = NA
+for (i in c(1:step)){
+  range1 = (i-1)*length_x + min(dapi_bk_c1q$x_new)
+  range2 = (i)*length_x + min(dapi_bk_c1q$x_new)
+  dapi_bk_c1q$x_id[dapi_bk_c1q$x_new >= range1 & dapi_bk_c1q$x_new <= range2] = i
+}
+# y_id steps
+dapi_bk_c1q = dapi_bk_c1q %>% arrange(y_new)
+dapi_bk_c1q$y_id = NA
+for (i in c(1:step)){
+  range1 = (i-1)*length_y + min(dapi_bk_c1q$y_new)
+  range2 = (i)*length_y + min(dapi_bk_c1q$y_new)
+  dapi_bk_c1q$y_id[dapi_bk_c1q$y_new >= range1 & dapi_bk_c1q$y_new <= range2] = i
+}
+dapi_bk_c1q$xyid = paste(dapi_bk_c1q$x_id, dapi_bk_c1q$y_id, sep='-')
+
+## phew finished
+
+## start plotting, sum c1qa signal in each region
+dpp1 = dapi_yury_c1q %>% group_by(xyid) %>%  summarise(totC1qaSeq = sum(C1QA))
+dpp2 = dapi_bk_c1q %>% group_by(xyid) %>%  summarise(totC1qaStain = sum(c1qa))
+dpp12 = left_join(dpp1, dpp2, by = "xyid")
+# dot plot for c1qa spatial correlation
+p = ggplot(dpp12, aes(x = sqrt(totC1qaSeq), y = sqrt(totC1qaStain))) +
+  theme_classic() +
+  geom_smooth(method='lm', formula= y~x) +
+  xlab("predict") + ylab("validate") +
+  geom_point(aes(stroke = 1))
+cor.test(dpp12$totC1qaSeq, dpp12$totC1qaStain, method=c("spearman"))
+
+               
+                    
+                     
+        
+                     
