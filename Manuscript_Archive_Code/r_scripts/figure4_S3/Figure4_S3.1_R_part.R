@@ -515,7 +515,7 @@ for (j in c(1:7)){
 
 ### next part start producing the b cell subtyping RNA and spatial
 
-## first step is to focus on b cell and do reclustering based on b cell markers
+## first step is to focus on b cell gatting
 
 # read in again the matched cells 
 codex_matched=read.csv("/home/bkzhu/SNE-multi/figure_rcode/figure_related_code_submit/data/murine_spleen/MurineCodex_mario_matched.csv")
@@ -526,62 +526,84 @@ cite_rna_all=read.csv("/home/bkzhu/SNE-multi/figure_rcode/figure_related_code_su
 cite_rna_all_matched=subset(cite_rna_all, cite_rna_all$cellID %in% cite_matched$cellID) # rna for matched citeseq cells
 cite_input_pro_rna=left_join(cite_matched,cite_rna_all_matched, by=c("cellID"="cellID")) #  citeseq simplified info
 cite_input_rna=cite_input_pro_rna[,-c(1:216)] # file only contains rna
-# one thing to notice, matching did not use cd45 but we want to use it during clustering
+cite_input_pro_only = cite_input_pro_only[,-c(1:5,215:216)] # remove additional columns id, control coutns etc
 # so we need to retrieved it from the original file as MARIO input
-codex_orig = read.csv("/home/bkzhu/SNE-multi/figure_rcode/figure_related_code_submit/data/murine_spleen/clean_cells_neutroflip.csv")
+codex_orig = read.csv("/home/bkzhu/SNE-multi/figure_rcode/figure_related_code_submit/data/murine_spleen/clean_cells.csv")
 codex_matched_allchannel=left_join(codex_matched,codex_orig, by =c("Unnamed..0.1"="X"))
 #### b cell subtypeing with codex proteins
 codex_b=subset(codex_matched_allchannel,codex_matched_allchannel$cluster.term.x=="B") # subset matched b cell
-# b cell related markers
-bmarkers=c("CD19.x","CD1632.x","IgD.x","CD27.x","CD79b.x","IgM.x","B220.x","MHCII.x","CD35.x","CD2135.x","CD45")
-codex_b_matched_pro=codex_b[,bmarkers]
-# get codex b cell matched citeseq rna
-nums <- unlist(lapply(cite_input_rna, is.numeric)) 
+codex_b_matched_pro=odex_b[,c(4:28, 35, 63, 64, 70, 76)] # only take out codex feature and other necessary ones
+
+######## make a seurat object for downstream plotting : heatmap and DE gene detection
+nums <- unlist(lapply(cite_input_rna, is.numeric)) # make sure only getting the counts
 nums_cite_input_rna=cite_input_rna[,nums]
 nums_cite_input_rna_ann=cbind(nums_cite_input_rna,ct=codex_matched$cluster.term)
 codex_b_matched_rna=subset(nums_cite_input_rna_ann,nums_cite_input_rna_ann$ct == "B")
 codex_b_matched_rna$ct <-NULL
-# then make the b cells into a seurat object
+# rename rows for seurat
 rownames(codex_b_matched_pro)=as.character(rownames(codex_b_matched_pro))
 rownames(codex_b_matched_rna)=as.character(rownames(codex_b_matched_pro))
-### seurat object
+### seurat object making
 # input matched rna
 codexB_obj=CreateSeuratObject(counts=t(codex_b_matched_rna),assay="RNA") # this is raw counts
 codexB_obj <- NormalizeData(object = codexB_obj, assay="RNA")
 codexB_obj <- ScaleData(codexB_obj,assay="RNA")
-# input codex with b cell markers
+# load codex data although not necessary
 codexB_obj[["codex"]]=CreateAssayObject(counts = t(codex_b_matched_pro))
 SetAssayData(object = codexB_obj, slot = "data", new.data = t(codex_b_matched_pro), assay="codex")
 codexB_obj=SetAssayData(object = codexB_obj, slot = "scale.data", new.data = t(codex_b_matched_pro), assay="codex")
-DefaultAssay(codexB_obj) <- "codex"
-codexB_obj <- RunPCA(codexB_obj, features = rownames(codexB_obj), reduction.name = "pca_cytof", reduction.key = "pca_cytof_", 
-                     verbose = FALSE)
-DimPlot(codexB_obj, reduction = "pca_cytof")
-ElbowPlot(codexB_obj, ndims = 10, reduction = "pca_cytof")
-## start clustering based on codex b cell markers
-codexB_obj <- RunTSNE(codexB_obj, dims = 1:5, reduction = "pca_cytof", reduction.key = "cyTSNE_", reduction.name = "tsne_cy",check_duplicates = FALSE)
-codexB_obj <- FindNeighbors(codexB_obj, features = rownames(codexB_obj), dims = NULL)
-cy.codexB_obj <- GetAssayData(codexB_obj, slot = "data")
-cy.codexB_obj <- dist(t(cy.codexB_obj))
-codexB_obj[["cy_snn"]] <- FindNeighbors(cy.codexB_obj)$snn
-codexB_obj <- FindClusters(codexB_obj, resolution = 0.2, graph.name = "cy_snn") # 0.2
-DimPlot(codexB_obj, label = TRUE) + NoLegend()
-## manual annotation of the b cell subtypes
-new.cluster.ids <- c("Naive","Transitional","Mature","GC","dirt")
-names(new.cluster.ids) <- levels(codexB_obj)
-idstore=Idents(codexB_obj)
-codexB_obj <- RenameIdents(codexB_obj, new.cluster.ids)
 
-## produce the ridge plot presented in figure S4.1
-p = RidgePlot(codexB_obj, features = bmarkers, ncol = 5)
 
-### produce the heatmap presented in figure 4 for b cell subtype
-codexB_obj.small <- subset(codexB_obj, downsample = 5000)
-cy.markers <- FindAllMarkers(codexB_obj.small, assay = "RNA", only.pos = TRUE, logfc.threshold = 0.25)
-# dont need to show the DE genes for cluster 4 (dirt)
-all_bgenes=cy.markers$gene
-all_bgenes_sub=all_bgenes[1:156] # genes after 156 is DE for dirt
-p = DoHeatmap(codexB_obj.small, features = all_bgenes_sub, assay = "RNA", angle = 90)
+
+### then save out as fcs for the codex b cells, gate them in cellengine
+saveout = codex_b_matched_pro
+saveout = as.data.frame(codex_b_matched_pro)
+#dummyt$cellID = cite_input_pro_rna$cellID
+saveout$numid = c(1:nrow(saveout))
+library(flowCore)
+ff <- new("flowFrame",
+          exprs=as.matrix(saveout)
+)
+write.FCS(ff, "/home/bkzhu/SNE-multi/figure_rcode/mouse_cite/b_gating/codex_pro_id.fcs", what="numeric", delimiter = "|", endian="big")
+
+
+
+## after gating get the cellengine exported population fcs files
+
+
+## read in all the subpopulation fcs files
+p1 = read.FCS("/home/bkzhu/SNE-multi/figure_rcode/mouse_cite/b_gating/codex_pro_id_xy_FO.fcs")
+p1exp = as.data.frame(exprs(p1)) #FO cell
+p2 = read.FCS("/home/bkzhu/SNE-multi/figure_rcode/mouse_cite/b_gating/codex_pro_id_xy_M.fcs")
+p2exp = as.data.frame(exprs(p2)) #M cell
+p3 = read.FCS("/home/bkzhu/SNE-multi/figure_rcode/mouse_cite/b_gating/codex_pro_id_xy_MZ.fcs")
+p3exp = as.data.frame(exprs(p3)) #MZ cell
+p4 = read.FCS("/home/bkzhu/SNE-multi/figure_rcode/mouse_cite/b_gating/codex_pro_id_xy_T1.fcs")
+p4exp = as.data.frame(exprs(p4)) #T1 cell
+#assigning annotation
+codex_b_matched_pro$gate = "low-quliaty-B"
+codex_b_matched_pro$gate[p1exp$numid] = "FO"
+codex_b_matched_pro$gate[p2exp$numid] = "M"
+codex_b_matched_pro$gate[p3exp$numid] = "MZ"
+codex_b_matched_pro$gate[p4exp$numid] = "T1"
+
+
+### use Seurat to detect DE genes for each sub population
+
+Idents(codexB_obj) = codex_b_matched_pro$gate
+codexB_obj.small <- subset(codexB_obj, idents = c("FO","M","MZ","T1")) # dont need low quality b cells
+codexB_obj.small <- subset(codexB_obj.small, downsample = 5000)
+cy.markers_mast <- FindAllMarkers(codexB_obj.small, assay = "RNA", only.pos = TRUE, logfc.threshold = 0.15, min.pct = 0.15)
+cy.markers_mast %>%
+  dplyr::filter(p_val_adj < 0.05) %>%
+  group_by(cluster) %>%
+  top_n(n = 50, wt = avg_logFC) -> siggene
+codexB_obj.show <- subset(codexB_obj, idents = c("FO","M","MZ","T1")) # dont need low quality b cells
+
+## the per b cell gate RNA DE heatmap
+p = DoHeatmap(codexB_obj.small, features = siggene$gene, assay = "RNA")
+
+
 
 ## then produce the spatial balbc1 spleen colored with sub types of b cells
 # input needed for plotting
@@ -589,8 +611,8 @@ codex_b_plot = codex_b[,c("cellLabelInImage","PointNum")]
 codex_b_plot$sub = Idents(codexB_obj)
 colnames(codex_b_plot) = c("cellLabelInImage","PointNum","sub")
 library(tiff)
-clr_pl=c("black","#424242","#ff537f","#94bf00" ,"#43ff4c","#54daff","#424242")
-names(clr_pl) <- c("not cell","not matched","Naive","Transitional","Mature","GC","dirt")
+clr_pl=c("black", "#424242","#ff537f", "#43ff4c", "#FEDE00", "#54daff", "#424242")
+names(clr_pl) <- c("not cell","not matched", "M", "MZ", "T1", "FO", "low-quliaty-B")
 codex_input = codex_b_plot
 codex_file=read.csv("../data/murine_spleen/all_clusters.csv") 
 ## b cell subtype spatial plot start
@@ -619,7 +641,7 @@ for (i in c(1:63)){ # intotal 63 fovs
   temp3$sub[is.na(temp3$sub)] ="not matched"
   # level annotation
   temp3$sub <- factor(temp3$sub,
-                      levels =  c("not cell","not matched","Naive","Transitional","Mature","GC","dirt"))
+                      levels =  c("not cell","not matched", "M", "MZ", "T1", "FO", "low-quliaty-B"))
   colScale <- scale_fill_manual(name = "grp",values = clr_pl)
   # change direction for y
   temp3$Var1=abs(temp3$Var1-dim(labelmap)[1])
@@ -656,6 +678,8 @@ for (i in c(1:63)){ # intotal 63 fovs
   dev.off()
 }
 ## b cell subtype spatial plot end
+
+
 
 ### now start to product the TSNE based on codex with matched RNA overlaying onto it
 ### this figure is presented in figure S4.1
