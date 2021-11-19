@@ -1,4 +1,4 @@
-This folder contains code and material used in paper TBD title. 
+This folder contains deposited code and material used during the production of manuscript, used as a record. 
 
 Including ```py_scripts```, python scripts related the usage of MARIO (legacy/ devo version, deposited in ```MARIO_devo_version```) in the manuscript;
 
