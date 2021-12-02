@@ -740,7 +740,7 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
                     n_components_ovlp=20, n_components_all=20,
                     n_cancor=5, n_wts=10,
                     n_clusters=10, n_components_filter=10, bad_prop=0.1, max_iter_filter=20,
-                    knn=False, embed_dim=20, max_iter_embed=500, save_path='.', verbose=False):
+                    knn=False, embed_dim=20, normalize_embed=True, max_iter_embed=500, save_path='.', verbose=False):
     """Run the whole Mario pipeline.
 
     Parameters
@@ -778,6 +778,8 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
         If is an integer k, run k-nn matching.
     embed_dim : int, default=20
         Number of CCA components when calculating joint embeddings.
+    normalize_embed : bool, default=True
+        Whether to normalize (center and scale to have unit standard deviation) the CCA scores.
     max_iter_embed : int, default=1000
         Number of maximum GCCA iterations.
     save_path : str, default='.'
@@ -883,6 +885,10 @@ def pipelined_mario(data_lst, normalization=True, n_batches=4,
         embedding_lst = embed.gcca(
             data_aligned_lst, embed_dim, normalization=False, max_iter=max_iter_embed, tol=1e-3, verbose=False
         )
+
+    if normalize_embed:
+        for idx in range(len(embedding_lst)):
+            embedding_lst[idx] = utils.normalize(embedding_lst[idx])
 
     print('Saving the results...', flush=True)
     os.makedirs(save_path, exist_ok=True)
