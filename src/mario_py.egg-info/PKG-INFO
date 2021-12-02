@@ -1,7 +1,7 @@
 Metadata-Version: 2.1
 Name: mario-py
 Version: 0.0.1
-Summary: A package for matching and integrating multi-modal single cell data with partially overlapping features
+Summary: A package for matching and integrating multi-modal single cell data with shared and distinct features
 Home-page: https://github.com/shuxiaoc/mario-py
 Author: Shuxiao Chen, Bokai Zhu
 Author-email: shuxiaoc@wharton.upenn.edu, bkzhu@stanford.edu
@@ -17,17 +17,17 @@ License-File: LICENSE
 
 # MARIO: single-cell proteomic data matching and integration pipeline
 
-This github repo includes `mario-py` and `mario-R`, which is a Python package for matching and integrating multi-modal single cell data with partially overlapping features.
-
-
 <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/giphy_mario.gif" width="100" height="100">
 
 
-## Description
+## [<img src="https://github.com/shuxiaoc/mario-py/blob/main/media/red.png" width="25" height="25">](https://www.youtube.com/watch?v=2iNKPkTOr5k&ab_channel=13irth) Description
 
-An in-depth paragraph about your project and overview of use.
+This github repo includes `mario-py` and `mario-R`, which is a Python package for matching and integrating multi-modal single cell data with partially overlapping features. The method is specifically tailored toward proteomic datasets, and for detailed description on the algorithm, including the core methodology, mathmetical ingredients, application on various biological samples, and extensive benchmarking, please refer to the [paper]().
 
-## Getting Started
+This work has been lead by Shuxiao Chen from [Zongming Lab](http://www-stat.wharton.upenn.edu/~zongming/) @Upenn and Bokai Zhu from [Nolan lab](https://web.stanford.edu/group/nolan/) @Stanford.
+
+
+## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/green.png" width="25" height="25"> Getting Started
 
 ### Dependencies
 
@@ -52,7 +52,31 @@ git clone https://github.com/shuxiaoc/mario-py.git
 cd mario-py/
 python setup.py install --user
 ```
-### Troubleshooting
+
+## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/blue.png" width="25" height="25"> How to use
+
+### Quick example:
+
+To use in ```MARIO``` in ```python``` :
+```
+one line pipeline with default
+```
+
+To use in ```MARIO``` in ```R``` (with package ```reticulate```) :
+```
+library(reticulate)
+one line pipeline with default
+```
+
+### Full tutorial:
+For step by step tutorials on how to use ```MARIO```, with fine-tuned parameters for optimal results and full functionality, please refer to the documents we provided here:
+
+[Python - Jupyter notebook: Match and Integration of Human Bonemarrow datasets](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/mario-py-bktest1.ipynb)
+
+[Rmarkdown: Match and Integration of Human Bonemarrow datasets](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/mario-r-bk.md)
+
+
+## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/yellow.png" width="25" height="25"> Troubleshooting
 
 * q1
 * q2
