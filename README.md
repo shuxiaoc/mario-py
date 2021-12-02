@@ -46,11 +46,12 @@ final_matching_lst, embedding_lst = pipelined_mario(data_lst=[df1, df2])
 ```
 Where ```df1``` and ```df2``` are two dataframes for match and integration, with row as cells, columns as features. Remember for shared features, the column names should be identical. Input list can be multiple dataframes, as ```MARIO``` accomodates for multiple dataset match and integration.
 
+The result contains the a matching list (matching), and a embedding list (integration). For detailed usage please refer to the Full tutorial section.  
 
-To use in ```MARIO``` in ```R``` (with package ```reticulate```) :
+Similarly, to use in ```MARIO``` in ```R``` (with package ```reticulate```) :
 ```
 library(reticulate)
-one line pipeline with default
+pipelined_res = pipelined_mario(data_lst=list(df1, df2))
 ```
 
 ### Full tutorial:
@@ -61,7 +62,7 @@ For step by step tutorials on how to use ```MARIO```, with fine-tuned parameters
 [Rmarkdown: Match and Integration of Human Bonemarrow datasets](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/mario-r-bk.md)
 
 
-## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/yellow.png" width="25" height="25"> Liscens
+## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/yellow.png" width="25" height="25"> License
 
 * q1
 * q2
