@@ -48,10 +48,10 @@ Where ```df1``` and ```df2``` are two dataframes for match and integration, with
 
 The result contains the a matching list (matching), and a embedding list (integration). For detailed usage please refer to the Full tutorial section.  
 
-To use in ```MARIO``` in ```R``` (with package ```reticulate```) :
+Similarly, to use in ```MARIO``` in ```R``` (with package ```reticulate```) :
 ```
 library(reticulate)
-one line pipeline with default
+pipelined_res = pipelined_mario(data_lst=list(df1, df2))
 ```
 
 ### Full tutorial:
