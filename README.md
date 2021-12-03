@@ -64,7 +64,7 @@ For step by step tutorials on how to use ```MARIO```, with fine-tuned parameters
 [Rmarkdown: Match and Integration of Human Bonemarrow datasets](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/mario-r-bk.md)
 
 
-## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/yellow.png" width="25" height="25"> License
+## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/yellow.png" width="25" height="25"> License and Citation
 
-* q1
-* q2
+```MARIO``` is under Academic Free License ("AFL") v. 3.0
+
