@@ -49,9 +49,8 @@ myenvs=conda_list() # get conda virtualenv list
 envname=myenvs$name[12] # specify which virtualenv to use, should use the one for MARIO
 use_condaenv(envname, required = TRUE)
 mario.match <- import("mario.match") # import main mario-py module
-pipelined_mario = mario.match$pipelined_mario # for running the overall pipeline
 
-pipelined_res = pipelined_mario(data_lst=list(df1, df2))
+pipelined_res = mario.match$pipelined_mario(data_lst=list(df1, df2))
 ```
 Where the result also contains the matching list and embedding list.
 
