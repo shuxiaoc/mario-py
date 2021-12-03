@@ -29,14 +29,6 @@ To install ```MARIO```, we can easily install it with ```pip``` function:
 pip install mario-py
 ```
 
-You can also directly build the package by cloning the github repo:
-
-```{bash}
-git clone https://github.com/shuxiaoc/mario-py.git
-cd mario-py/
-python setup.py install --user
-```
-
 ## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/blue.png" width="25" height="25"> How to use
 
 ### Quick example:
@@ -60,7 +52,9 @@ Where the result also contains the matching list and embedding list.
 For step by step tutorials on how to use ```MARIO```, with fine-tuned parameters for optimal results and full functionality, please refer to the documents we provided here:
 
 [Python - Jupyter notebook: Match and Integration of Human Bonemarrow datasets](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/mario-py-tutorial-BM.ipynb)
+
 [Python - Jupyter notebook: Match and Integration of multiple Xspecies datasets](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/mario-py-multiple-Xspecies.ipynb)
+
 [R - Rmarkdown: Match and Integration of Human Bonemarrow datasets](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/mario-r-bk.md)
 
 
