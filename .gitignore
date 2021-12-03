@@ -2,3 +2,4 @@
 .idea
 .Rhistory
 dist
+rebuild.sh

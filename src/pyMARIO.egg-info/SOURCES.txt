@@ -1,0 +1,15 @@
+LICENSE.txt
+README.md
+pyproject.toml
+setup.cfg
+src/mario/__init__.py
+src/mario/cluster.py
+src/mario/embed.py
+src/mario/match.py
+src/mario/match_utils.py
+src/mario/utils.py
+src/pyMARIO.egg-info/PKG-INFO
+src/pyMARIO.egg-info/SOURCES.txt
+src/pyMARIO.egg-info/dependency_links.txt
+src/pyMARIO.egg-info/requires.txt
+src/pyMARIO.egg-info/top_level.txt
