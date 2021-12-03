@@ -35,6 +35,7 @@ python -m pip install pyMARIO
 
 To use in ```MARIO``` in ```python``` :
 ```
+from mario.match import pipelined_mario
 final_matching_lst, embedding_lst = pipelined_mario(data_lst=[df1, df2])
 ```
 Where ```df1``` and ```df2``` are two dataframes for match and integration, with row as cells, columns as features. Remember for shared features, the column names should be identical. Input list can be multiple dataframes, as ```MARIO``` accomodates for multiple dataset match and integration.
@@ -44,6 +45,12 @@ The result contains the a matching list (matching), and a embedding list (integr
 Similarly, to use in ```MARIO``` in ```R``` (with package ```reticulate```) :
 ```
 library(reticulate)
+myenvs=conda_list() # get conda virtualenv list
+envname=myenvs$name[12] # specify which virtualenv to use, should use the one for MARIO-py
+use_condaenv(envname, required = TRUE)
+mario.match <- import("mario.match") # import main mario-py module
+pipelined_mario = mario.match$pipelined_mario # for running the overall pipeline
+
 pipelined_res = pipelined_mario(data_lst=list(df1, df2))
 ```
 Where the result also contains the matching list and embedding list.
