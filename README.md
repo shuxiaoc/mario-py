@@ -46,7 +46,7 @@ Similarly, to use in ```MARIO``` in ```R``` (with package ```reticulate```) :
 ```
 library(reticulate)
 myenvs=conda_list() # get conda virtualenv list
-envname=myenvs$name[12] # specify which virtualenv to use, should use the one for MARIO-py
+envname=myenvs$name[12] # specify which virtualenv to use, should use the one for MARIO
 use_condaenv(envname, required = TRUE)
 mario.match <- import("mario.match") # import main mario-py module
 pipelined_mario = mario.match$pipelined_mario # for running the overall pipeline
