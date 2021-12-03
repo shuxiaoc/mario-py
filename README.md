@@ -9,6 +9,7 @@ This github repo includes `mario-py` and `mario-R`, which is a Python package fo
 
 This work has been lead by Shuxiao Chen from [Zongming Lab](http://www-stat.wharton.upenn.edu/~zongming/) @Upenn and Bokai Zhu from [Nolan lab](https://web.stanford.edu/group/nolan/) @Stanford.
 
+<img src="https://github.com/shuxiaoc/mario-py/blob/main/media/mario_flow.png" width="25" height="25">
 
 ## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/green.png" width="25" height="25"> Getting Started
 
