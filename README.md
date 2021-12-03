@@ -53,6 +53,7 @@ Similarly, to use in ```MARIO``` in ```R``` (with package ```reticulate```) :
 library(reticulate)
 pipelined_res = pipelined_mario(data_lst=list(df1, df2))
 ```
+Where the result also contains the matching list and embedding list.
 
 ### Full tutorial:
 For step by step tutorials on how to use ```MARIO```, with fine-tuned parameters for optimal results and full functionality, please refer to the documents we provided here:
