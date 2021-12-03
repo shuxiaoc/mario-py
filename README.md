@@ -23,10 +23,10 @@ conda create -n mario python=3.8
 
 ### Installing
 
-To install ```MARIO```, we can easily install it with ```pip``` function:
+To install ```MARIO```, we can easily install it with ```pip``` function (package name ```pyMARIO```):
 
 ```{bash}
-pip install mario-py
+python -m pip install pyMARIO
 ```
 
 ## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/blue.png" width="25" height="25"> How to use
