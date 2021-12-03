@@ -59,7 +59,7 @@ Where the result also contains the matching list and embedding list.
 ### Full tutorial:
 For step by step tutorials on how to use ```MARIO```, with fine-tuned parameters for optimal results and full functionality, please refer to the documents we provided here:
 
-[Python - Jupyter notebook: Match and Integration of Human Bonemarrow datasets](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/mario-py-bktest1.ipynb)
+[Python - Jupyter notebook: Match and Integration of Human Bonemarrow datasets](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/mario-py-tutorial-BM.ipynb)
 
 [Rmarkdown: Match and Integration of Human Bonemarrow datasets](https://github.com/shuxiaoc/mario-py/blob/main/tutorials/mario-r-bk.md)
 
