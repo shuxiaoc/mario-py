@@ -29,14 +29,6 @@ To install ```MARIO```, we can easily install it with ```pip``` function:
 pip install mario-py
 ```
 
-You can also directly build the package by cloning the github repo:
-
-```{bash}
-git clone https://github.com/shuxiaoc/mario-py.git
-cd mario-py/
-python setup.py install --user
-```
-
 ## <img src="https://github.com/shuxiaoc/mario-py/blob/main/media/blue.png" width="25" height="25"> How to use
 
 ### Quick example:
