@@ -5,7 +5,7 @@
 
 ## [<img src="https://github.com/shuxiaoc/mario-py/blob/main/media/red.png" width="25" height="25">](https://www.youtube.com/watch?v=2iNKPkTOr5k&ab_channel=13irth) Description
 
-This github repo includes `mario-py` and `mario-R`, which is a Python package for matching and integrating multi-modal single cell data with partially overlapping features. The method is specifically tailored toward proteomic datasets, and for detailed description on the algorithm, including the core methodology, mathmetical ingredients, application on various biological samples, and extensive benchmarking, please refer to the [paper]().
+This github repo includes `mario-py` and `mario-R`, which is a Python package for matching and integrating multi-modal single cell data with partially overlapping features. The method is specifically tailored toward proteomic datasets, and for detailed description on the algorithm, including the core methodology, mathmetical ingredients, application on various biological samples, and extensive benchmarking, please refer to the [paper](https://www.biorxiv.org/content/10.1101/2021.12.03.471185v1).
 
 This work has been lead by Shuxiao Chen from [Zongming Lab](http://www-stat.wharton.upenn.edu/~zongming/) @Upenn and Bokai Zhu from [Nolan lab](https://web.stanford.edu/group/nolan/) @Stanford.
 
