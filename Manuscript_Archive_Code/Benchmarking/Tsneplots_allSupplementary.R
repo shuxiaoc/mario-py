@@ -671,8 +671,8 @@ p = ggplot(fstmnn_tsne_data_10)  +
   labs( x = "tsne 1", y = "tsne 2") + theme_bw() + ggtitle("fstmnn integration")
 
 ## tsne plots for scanorama
-scan_x = read.csv("/home/bkzhu/SNE-multi/figure_rcode/figure_related_code_submit/temp/murine_codex_scan.csv")
-scan_y = read.csv("/home/bkzhu/SNE-multi/figure_rcode/figure_related_code_submit/temp/murine_cite_scan.csv")
+scan_x = read.csv("/home/bkzhu/SNE-multi/figure_rcode/figure_related_code_submit/temp/murine_codex_scan.csv", header = FALSE)
+scan_y = read.csv("/home/bkzhu/SNE-multi/figure_rcode/figure_related_code_submit/temp/murine_cite_scan.csv", header = FALSE)
 embedding = rbind(scan_x, scan_y)
 set.seed(41)
 scan_tsne_10=Rtsne(embedding[,-1], check_duplicates = FALSE, num_threads = 10) # run with cca
