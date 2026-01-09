@@ -68,3 +68,23 @@ For step by step tutorials on how to use ```MARIO```, with fine-tuned parameters
 
 ```MARIO``` is under the [Academic Software License Agreement](https://github.com/shuxiaoc/mario-py/blob/main/LICENSE.txt), please use accordingly.
 
+If you use **Mario** in your research, please cite the following paper:
+
+**Zhu, B., Chen, S., Bai, Y., Chen, H., Liao, G., Mukherjee, N., Vazquez, G., McIlwain, D. R., Tzankov, A., Lee, I. T., Matter, M. S., Goltsev, Y., Nolan, G. P. & Jiang, S.**  
+*Robust single-cell matching and multimodal analysis using shared and distinct features.*  
+**Nature Methods** **20**, 304–315 (2023).  
+https://doi.org/10.1038/s41592-022-01709-7
+
+```bibtex
+@article{zhu2023robust,
+  title={Robust single-cell matching and multimodal analysis using shared and distinct features},
+  author={Zhu, Bokai and Chen, Shuxiao and Bai, Yunhao and Chen, Han and Liao, Guanrui and Mukherjee, Nilanjan and Vazquez, Gustavo and McIlwain, David R and Tzankov, Alexandar and Lee, Ivan T and others},
+  journal={Nature Methods},
+  volume={20},
+  number={2},
+  pages={304--315},
+  year={2023},
+  publisher={Nature Publishing Group US New York}
+}
+```
+
